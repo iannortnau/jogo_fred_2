@@ -1,8 +1,10 @@
 import {useState} from "react";
 import styles from "../../styles/components/Arena.module.css"
 import Item from "../Item";
+import Player from "../entities/Player";
+import Arena from "../ornamental/Arena";
 
-export default function Arena(props) {
+export default function MainGame(props) {
     const [lista, setLista] = useState([<Item nome={0} onClick={clink} key={0}/>]);
     const [update, setUpdate] = useState(1);
 
@@ -16,10 +18,11 @@ export default function Arena(props) {
 
 
     return (
-        <div className={styles.arena}>
-            {lista.map(function (item,index) {
+        <Arena>
+            <Player/>
+            {/*lista.map(function (item,index) {
                 return(item);
-            })}
-        </div>
+            })*/}
+        </Arena>
     )
 }
