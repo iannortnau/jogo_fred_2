@@ -1,5 +1,7 @@
 import {useContext, useEffect, useState} from "react";
 import {GameContext} from "../../contexts/gameContext";
+import img from "../../../public/images/fred.png";
+import Image from "next/image";
 
 let modificadorX = 0;
 let modificadorY = 0;
@@ -105,10 +107,12 @@ export default function Player(props) {
 
 
     return (
-        <p
+        <img
             style={{position:"relative",top:y+"px",left:x+"px"}}
-        >
-            a
-        </p>
+            src="../../../images/fred.png"
+            alt="Picture of the author"
+            width={40}
+            height={60}
+        />
     )
 }

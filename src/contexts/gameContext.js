@@ -3,7 +3,7 @@ import {createContext, useState} from "react";
 export const GameContext = createContext({});
 
 export function GameProvider(props){
-    const [intervaloDeAtualizacao,setIntervaloDeAtualizacao] = useState(100);
+    const [intervaloDeAtualizacao,setIntervaloDeAtualizacao] = useState(10);
 
 
     return (
