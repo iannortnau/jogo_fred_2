@@ -1,4 +1,10 @@
 .arena{
+    position:absolute;
+    left: 0;
+    right: 0;
+    top: 200px;
+    margin-left: auto;
+    margin-right: auto;
     min-width: 800px;
     min-height: 600px;
     max-width: 800px;
