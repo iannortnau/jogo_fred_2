@@ -4,7 +4,7 @@ import styles from "../../styles/components/Arena.module.css";
 export default function Player(props) {
     return (
         <div
-            className={styles.playerShip}
+            className={`${styles.playerShip} ${props.escudoAtivo ? styles.playerShieldActive : ""} ${props.superAtivo ? styles.playerSuperActive : ""}`}
             style={{
                 top: props.y + "px",
                 left: props.x + "px",

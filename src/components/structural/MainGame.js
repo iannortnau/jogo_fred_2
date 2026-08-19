@@ -4,6 +4,7 @@ import Tiro1 from "../entities/Tiro1";
 import Player from "../entities/Player";
 import Arena from "../ornamental/Arena";
 import Inimigo from "../entities/Inimigo";
+import PowerUp from "../entities/PowerUp";
 import {GameContext} from "../../contexts/gameContext";
 import styles from "../../styles/components/Arena.module.css";
 import {useGameAudio} from "../../hooks/useGameAudio";
@@ -12,16 +13,27 @@ const LARGURA_PLAYER = 86;
 const ALTURA_PLAYER = 58;
 const LARGURA_TIRO = 18;
 const ALTURA_TIRO = 6;
+const LARGURA_SUPER_TIRO = 38;
+const ALTURA_SUPER_TIRO = 10;
 const LARGURA_INIMIGO = 44;
 const ALTURA_INIMIGO = 44;
+const LARGURA_POWER_UP = 46;
+const ALTURA_POWER_UP = 46;
 const VIDA_INICIAL = 100;
 const VELOCIDADE_PLAYER = 2;
 const VELOCIDADE_TIRO = 5;
+const VELOCIDADE_SUPER_TIRO = 9;
+const VELOCIDADE_POWER_UP = 1.15;
 const DANO_INIMIGO = 20;
 const DANO_ESCAPOU = 10;
 const COOLDOWN_TIRO = 150;
 const INTERVALO_SPAWN_BASE = 1100;
 const MAX_INIMIGOS = 8;
+const CHANCE_POWER_UP = 0.36;
+const DURACAO_TIRO_DUPLO = 9000;
+const DURACAO_ESCUDO = 7000;
+const DURACAO_SUPER = 10000;
+const TIPOS_POWER_UP = ["vida", "tiroDuplo", "escudo", "super"];
 
 function retangulosColidem(a, b){
     return (
@@ -43,6 +55,18 @@ function criaInimigo(larguraArena, alturaArena, pontos = 0, visivel = false){
     };
 }
 
+function criaPowerUp(x, y){
+    const tipo = TIPOS_POWER_UP[Math.floor(Math.random() * TIPOS_POWER_UP.length)];
+
+    return {
+        id: uuidv1(),
+        tipo,
+        x,
+        y,
+        velocidade: VELOCIDADE_POWER_UP,
+    };
+}
+
 function criaEstadoInicial(larguraArena, alturaArena){
     return {
         player: {
@@ -51,6 +75,12 @@ function criaEstadoInicial(larguraArena, alturaArena){
         },
         tiros: [],
         inimigos: [criaInimigo(larguraArena, alturaArena, 0, true)],
+        powerUps: [],
+        efeitos: {
+            tiroDuplo: 0,
+            escudo: 0,
+            super: 0,
+        },
         vida: VIDA_INICIAL,
         pontos: 0,
         spawnTimer: 0,
@@ -63,7 +93,7 @@ export default function MainGame() {
     const [jogo, setJogo] = useState(function () {
         return criaEstadoInicial(larguraArena, alturaArena);
     });
-    const {audioAtivo, alternarAudio, registrarInteracao, tocarTiro} = useGameAudio();
+    const {audioAtivo, alternarAudio, registrarInteracao, tocarPowerUp, tocarTiro} = useGameAudio();
     const teclasPressionadasRef = useRef(new Set());
     const ultimoTiroRef = useRef(0);
     const tiroControleRef = useRef(null);
@@ -84,12 +114,14 @@ export default function MainGame() {
 
     const atira = useCallback(function () {
         const agora = Date.now();
+        const efeitosAtivos = jogo.efeitos || {tiroDuplo: 0, escudo: 0, super: 0};
+        const cooldownAtual = efeitosAtivos.super > 0 ? 80 : COOLDOWN_TIRO;
 
         if(jogo.gameOver){
             return;
         }
 
-        if(agora - ultimoTiroRef.current < COOLDOWN_TIRO){
+        if(agora - ultimoTiroRef.current < cooldownAtual){
             return;
         }
 
@@ -100,18 +132,24 @@ export default function MainGame() {
                 return estadoAtual;
             }
 
-            const novoTiro = {
-                id: uuidv1(),
-                x: estadoAtual.player.x + LARGURA_PLAYER,
-                y: estadoAtual.player.y + (ALTURA_PLAYER / 2) - (ALTURA_TIRO / 2),
-            };
+            const efeitosAtuais = estadoAtual.efeitos || {tiroDuplo: 0, escudo: 0, super: 0};
+            const superAtivo = efeitosAtuais.super > 0;
+            const deslocamentosTiro = superAtivo ? [-16, 0, 16] : efeitosAtuais.tiroDuplo > 0 ? [-10, 10] : [0];
+            const novosTiros = deslocamentosTiro.map(function (deslocamentoY) {
+                return {
+                    id: uuidv1(),
+                    x: estadoAtual.player.x + LARGURA_PLAYER,
+                    y: estadoAtual.player.y + (ALTURA_PLAYER / 2) - ((superAtivo ? ALTURA_SUPER_TIRO : ALTURA_TIRO) / 2) + deslocamentoY,
+                    super: superAtivo,
+                };
+            });
 
             return {
                 ...estadoAtual,
-                tiros: [...estadoAtual.tiros, novoTiro],
+                tiros: [...estadoAtual.tiros, ...novosTiros],
             };
         });
-    }, [jogo.gameOver, tocarTiro]);
+    }, [jogo.efeitos, jogo.gameOver, tocarTiro]);
 
     useEffect(function () {
         function keyDown(e){
@@ -202,16 +240,24 @@ export default function MainGame() {
                 const direcaoY = (teclas.has("s") ? 1 : 0) - (teclas.has("w") ? 1 : 0);
                 const normalizadorDiagonal = direcaoX !== 0 && direcaoY !== 0 ? Math.SQRT1_2 : 1;
 
+                const efeitosAtuais = estadoAtual.efeitos || {tiroDuplo: 0, escudo: 0, super: 0};
+                let efeitos = {
+                    tiroDuplo: Math.max(0, efeitosAtuais.tiroDuplo - intervaloDeAtualizacao),
+                    escudo: Math.max(0, efeitosAtuais.escudo - intervaloDeAtualizacao),
+                    super: Math.max(0, efeitosAtuais.super - intervaloDeAtualizacao),
+                };
+                const velocidadePlayer = efeitos.super > 0 ? VELOCIDADE_PLAYER * 1.9 : VELOCIDADE_PLAYER;
+
                 const player = {
-                    x: limitaX(estadoAtual.player.x + (direcaoX * VELOCIDADE_PLAYER * normalizadorDiagonal), LARGURA_PLAYER),
-                    y: limitaY(estadoAtual.player.y + (direcaoY * VELOCIDADE_PLAYER * normalizadorDiagonal), ALTURA_PLAYER),
+                    x: limitaX(estadoAtual.player.x + (direcaoX * velocidadePlayer * normalizadorDiagonal), LARGURA_PLAYER),
+                    y: limitaY(estadoAtual.player.y + (direcaoY * velocidadePlayer * normalizadorDiagonal), ALTURA_PLAYER),
                 };
 
                 let tiros = estadoAtual.tiros
                     .map(function (tiro) {
                         return {
                             ...tiro,
-                            x: tiro.x + VELOCIDADE_TIRO,
+                            x: tiro.x + (tiro.super ? VELOCIDADE_SUPER_TIRO : VELOCIDADE_TIRO),
                         };
                     })
                     .filter(function (tiro) {
@@ -222,11 +268,23 @@ export default function MainGame() {
                     return {
                         ...inimigo,
                         x: inimigo.x - inimigo.velocidade,
-                    };
-                });
+                        };
+                    });
+
+                let powerUps = (estadoAtual.powerUps || [])
+                    .map(function (powerUp) {
+                        return {
+                            ...powerUp,
+                            x: powerUp.x - powerUp.velocidade,
+                        };
+                    })
+                    .filter(function (powerUp) {
+                        return powerUp.x > -LARGURA_POWER_UP;
+                    });
 
                 const tirosRemovidos = new Set();
                 const inimigosRemovidos = new Set();
+                const novosPowerUps = [];
                 let pontosGanhos = 0;
 
                 tiros.forEach(function (tiro) {
@@ -236,14 +294,25 @@ export default function MainGame() {
                         }
 
                         const colidiu = retangulosColidem(
-                            {...tiro, largura: LARGURA_TIRO, altura: ALTURA_TIRO},
+                            {
+                                ...tiro,
+                                largura: tiro.super ? LARGURA_SUPER_TIRO : LARGURA_TIRO,
+                                altura: tiro.super ? ALTURA_SUPER_TIRO : ALTURA_TIRO,
+                            },
                             {...inimigo, largura: LARGURA_INIMIGO, altura: ALTURA_INIMIGO}
                         );
 
                         if(colidiu){
-                            tirosRemovidos.add(tiro.id);
+                            if(!tiro.super){
+                                tirosRemovidos.add(tiro.id);
+                            }
+
                             inimigosRemovidos.add(inimigo.id);
-                            pontosGanhos += 10;
+                            pontosGanhos += tiro.super ? 15 : 10;
+
+                            if(Math.random() < CHANCE_POWER_UP){
+                                novosPowerUps.push(criaPowerUp(inimigo.x, inimigo.y));
+                            }
                         }
                     });
                 });
@@ -265,7 +334,11 @@ export default function MainGame() {
 
                     if(retangulosColidem(playerBox, inimigoBox)){
                         inimigosQueDerrubaramVida.add(inimigo.id);
-                        danoRecebido += DANO_INIMIGO;
+
+                        if(efeitos.escudo <= 0 && efeitos.super <= 0){
+                            danoRecebido += DANO_INIMIGO;
+                        }
+
                         return;
                     }
 
@@ -279,8 +352,57 @@ export default function MainGame() {
                     return !inimigosQueDerrubaramVida.has(inimigo.id);
                 });
 
-                const pontos = estadoAtual.pontos + pontosGanhos;
-                const vida = Math.max(0, estadoAtual.vida - danoRecebido);
+                powerUps = [...powerUps, ...novosPowerUps];
+
+                let pontos = estadoAtual.pontos + pontosGanhos;
+                let vida = Math.max(0, estadoAtual.vida - danoRecebido);
+                let coletouPowerUp = false;
+
+                powerUps = powerUps.filter(function (powerUp) {
+                    const coletou = retangulosColidem(
+                        playerBox,
+                        {...powerUp, largura: LARGURA_POWER_UP, altura: ALTURA_POWER_UP}
+                    );
+
+                    if(!coletou){
+                        return true;
+                    }
+
+                    coletouPowerUp = true;
+                    pontos += 5;
+
+                    if(powerUp.tipo === "vida"){
+                        vida = Math.min(VIDA_INICIAL, vida + 25);
+                    }
+
+                    if(powerUp.tipo === "tiroDuplo"){
+                        efeitos = {
+                            ...efeitos,
+                            tiroDuplo: DURACAO_TIRO_DUPLO,
+                        };
+                    }
+
+                    if(powerUp.tipo === "escudo"){
+                        efeitos = {
+                            ...efeitos,
+                            escudo: DURACAO_ESCUDO,
+                        };
+                    }
+
+                    if(powerUp.tipo === "super"){
+                        efeitos = {
+                            ...efeitos,
+                            super: DURACAO_SUPER,
+                        };
+                    }
+
+                    return false;
+                });
+
+                if(coletouPowerUp){
+                    tocarPowerUp();
+                }
+
                 let spawnTimer = estadoAtual.spawnTimer + intervaloDeAtualizacao;
                 const intervaloSpawn = Math.max(450, INTERVALO_SPAWN_BASE - (pontos * 3));
                 const limiteInimigos = Math.min(MAX_INIMIGOS, 3 + Math.floor(pontos / 50));
@@ -295,6 +417,8 @@ export default function MainGame() {
                     player,
                     tiros,
                     inimigos,
+                    powerUps,
+                    efeitos,
                     vida,
                     pontos,
                     spawnTimer,
@@ -306,7 +430,10 @@ export default function MainGame() {
         return function () {
             clearInterval(intervalo);
         };
-    }, [alturaArena, intervaloDeAtualizacao, jogo.gameOver, larguraArena, limitaX, limitaY]);
+    }, [alturaArena, intervaloDeAtualizacao, jogo.gameOver, larguraArena, limitaX, limitaY, tocarPowerUp]);
+
+    const efeitosAtivos = jogo.efeitos || {tiroDuplo: 0, escudo: 0, super: 0};
+    const powerUps = jogo.powerUps || [];
 
     return (
         <div className={styles.gameLayout}>
@@ -320,6 +447,11 @@ export default function MainGame() {
                         <span className={styles.vidaTexto}>{jogo.vida}</span>
                     </div>
                     <div className={styles.hudDireita}>
+                        <div className={styles.powerStatus}>
+                            {efeitosAtivos.tiroDuplo > 0 && <span>x2</span>}
+                            {efeitosAtivos.escudo > 0 && <span>Escudo</span>}
+                            {efeitosAtivos.super > 0 && <span>SUPER</span>}
+                        </div>
                         <button
                             className={styles.audioButton}
                             type="button"
@@ -336,6 +468,8 @@ export default function MainGame() {
                     y={jogo.player.y}
                     largura={LARGURA_PLAYER}
                     altura={ALTURA_PLAYER}
+                    escudoAtivo={efeitosAtivos.escudo > 0}
+                    superAtivo={efeitosAtivos.super > 0}
                 />
 
                 {jogo.tiros.map(function (tiro) {
@@ -344,6 +478,7 @@ export default function MainGame() {
                             key={tiro.id}
                             x={tiro.x}
                             y={tiro.y}
+                            super={tiro.super}
                         />
                     );
                 })}
@@ -354,6 +489,17 @@ export default function MainGame() {
                             key={inimigo.id}
                             x={inimigo.x}
                             y={inimigo.y}
+                        />
+                    );
+                })}
+
+                {powerUps.map(function (powerUp) {
+                    return (
+                        <PowerUp
+                            key={powerUp.id}
+                            tipo={powerUp.tipo}
+                            x={powerUp.x}
+                            y={powerUp.y}
                         />
                     );
                 })}

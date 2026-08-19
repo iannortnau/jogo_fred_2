@@ -146,6 +146,23 @@ export function useGameAudio(){
         oscilador.stop(inicio + 0.13);
     }, [iniciaMusica, preparaAudio]);
 
+    const tocarPowerUp = useCallback(function () {
+        if(!audioAtivoRef.current){
+            return;
+        }
+
+        audioLiberadoRef.current = true;
+        const contexto = preparaAudio();
+
+        if(!contexto){
+            return;
+        }
+
+        iniciaMusica();
+        tocaNota(523.25, contexto.currentTime, 0.12);
+        tocaNota(783.99, contexto.currentTime + 0.08, 0.18);
+    }, [iniciaMusica, preparaAudio, tocaNota]);
+
     const alternarAudio = useCallback(function () {
         audioLiberadoRef.current = true;
 
@@ -191,6 +208,7 @@ export function useGameAudio(){
         audioAtivo,
         alternarAudio,
         registrarInteracao,
+        tocarPowerUp,
         tocarTiro,
     };
 }
