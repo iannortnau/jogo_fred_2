@@ -8,6 +8,7 @@ body {
   justify-content: center;
   align-items: center;
   background: #050816;
+  overflow: hidden;
 }
 
 a {
@@ -17,4 +18,14 @@ a {
 
 * {
   box-sizing: border-box;
+}
+
+button {
+  font-family: inherit;
+}
+
+@media (max-width: 860px) {
+  body {
+    align-items: flex-start;
+  }
 }

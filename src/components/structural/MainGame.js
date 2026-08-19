@@ -66,12 +66,21 @@ export default function MainGame() {
     const {audioAtivo, alternarAudio, registrarInteracao, tocarTiro} = useGameAudio();
     const teclasPressionadasRef = useRef(new Set());
     const ultimoTiroRef = useRef(0);
+    const tiroControleRef = useRef(null);
+
+    const pararTiroControle = useCallback(function () {
+        if(tiroControleRef.current && typeof window !== "undefined"){
+            window.clearInterval(tiroControleRef.current);
+            tiroControleRef.current = null;
+        }
+    }, []);
 
     const reiniciar = useCallback(function () {
         teclasPressionadasRef.current.clear();
+        pararTiroControle();
         ultimoTiroRef.current = 0;
         setJogo(criaEstadoInicial(larguraArena, alturaArena));
-    }, [alturaArena, larguraArena]);
+    }, [alturaArena, larguraArena, pararTiroControle]);
 
     const atira = useCallback(function () {
         const agora = Date.now();
@@ -142,6 +151,40 @@ export default function MainGame() {
             document.removeEventListener("keyup", keyUp);
         };
     }, [atira, jogo.gameOver, registrarInteracao, reiniciar]);
+
+    const pressionarControle = useCallback(function (tecla, e) {
+        e.preventDefault();
+        registrarInteracao();
+
+        if(tecla === " "){
+            atira();
+
+            if(!tiroControleRef.current && typeof window !== "undefined"){
+                tiroControleRef.current = window.setInterval(atira, COOLDOWN_TIRO + 30);
+            }
+
+            return;
+        }
+
+        teclasPressionadasRef.current.add(tecla);
+    }, [atira, registrarInteracao]);
+
+    const soltarControle = useCallback(function (tecla, e) {
+        e.preventDefault();
+
+        if(tecla === " "){
+            pararTiroControle();
+            return;
+        }
+
+        teclasPressionadasRef.current.delete(tecla);
+    }, [pararTiroControle]);
+
+    useEffect(function () {
+        return function () {
+            pararTiroControle();
+        };
+    }, [pararTiroControle]);
 
     useEffect(function () {
         if(jogo.gameOver){
@@ -266,61 +309,123 @@ export default function MainGame() {
     }, [alturaArena, intervaloDeAtualizacao, jogo.gameOver, larguraArena, limitaX, limitaY]);
 
     return (
-        <Arena>
-            <div className={styles.hud}>
-                <div className={styles.vidaGrupo}>
-                    <span className={styles.hudLabel}>Vida</span>
-                    <div className={styles.vidaBarra}>
-                        <span style={{width: jogo.vida + "%"}} />
+        <div className={styles.gameLayout}>
+            <Arena>
+                <div className={styles.hud}>
+                    <div className={styles.vidaGrupo}>
+                        <span className={styles.hudLabel}>Vida</span>
+                        <div className={styles.vidaBarra}>
+                            <span style={{width: jogo.vida + "%"}} />
+                        </div>
+                        <span className={styles.vidaTexto}>{jogo.vida}</span>
                     </div>
-                    <span className={styles.vidaTexto}>{jogo.vida}</span>
+                    <div className={styles.hudDireita}>
+                        <button
+                            className={styles.audioButton}
+                            type="button"
+                            onClick={alternarAudio}
+                        >
+                            {audioAtivo ? "Som ligado" : "Som mudo"}
+                        </button>
+                        <strong className={styles.pontos}>Pontos: {jogo.pontos}</strong>
+                    </div>
                 </div>
-                <div className={styles.hudDireita}>
+
+                <Player
+                    x={jogo.player.x}
+                    y={jogo.player.y}
+                    largura={LARGURA_PLAYER}
+                    altura={ALTURA_PLAYER}
+                />
+
+                {jogo.tiros.map(function (tiro) {
+                    return (
+                        <Tiro1
+                            key={tiro.id}
+                            x={tiro.x}
+                            y={tiro.y}
+                        />
+                    );
+                })}
+
+                {jogo.inimigos.map(function (inimigo) {
+                    return (
+                        <Inimigo
+                            key={inimigo.id}
+                            x={inimigo.x}
+                            y={inimigo.y}
+                        />
+                    );
+                })}
+
+                {jogo.gameOver && (
+                    <div className={styles.gameOver}>
+                        <strong>Fim de jogo</strong>
+                        <span>Pontos: {jogo.pontos}</span>
+                        <button type="button" onClick={reiniciar}>Reiniciar</button>
+                    </div>
+                )}
+            </Arena>
+
+            <div className={styles.mobileControls} aria-label="Controles mobile">
+                <div className={styles.dPad}>
+                    <span />
                     <button
-                        className={styles.audioButton}
                         type="button"
-                        onClick={alternarAudio}
+                        onPointerDown={(e) => pressionarControle("w", e)}
+                        onPointerUp={(e) => soltarControle("w", e)}
+                        onPointerCancel={(e) => soltarControle("w", e)}
+                        onPointerLeave={(e) => soltarControle("w", e)}
                     >
-                        {audioAtivo ? "Som ligado" : "Som mudo"}
+                        ^
                     </button>
-                    <strong className={styles.pontos}>Pontos: {jogo.pontos}</strong>
+                    <span />
+                    <button
+                        type="button"
+                        onPointerDown={(e) => pressionarControle("a", e)}
+                        onPointerUp={(e) => soltarControle("a", e)}
+                        onPointerCancel={(e) => soltarControle("a", e)}
+                        onPointerLeave={(e) => soltarControle("a", e)}
+                    >
+                        &lt;
+                    </button>
+                    <span className={styles.dPadCenter} />
+                    <button
+                        type="button"
+                        onPointerDown={(e) => pressionarControle("d", e)}
+                        onPointerUp={(e) => soltarControle("d", e)}
+                        onPointerCancel={(e) => soltarControle("d", e)}
+                        onPointerLeave={(e) => soltarControle("d", e)}
+                    >
+                        &gt;
+                    </button>
+                    <span />
+                    <button
+                        type="button"
+                        onPointerDown={(e) => pressionarControle("s", e)}
+                        onPointerUp={(e) => soltarControle("s", e)}
+                        onPointerCancel={(e) => soltarControle("s", e)}
+                        onPointerLeave={(e) => soltarControle("s", e)}
+                    >
+                        v
+                    </button>
+                    <span />
+                </div>
+
+                <div className={styles.fireCluster}>
+                    <button
+                        className={styles.fireButton}
+                        type="button"
+                        onPointerDown={(e) => pressionarControle(" ", e)}
+                        onPointerUp={(e) => soltarControle(" ", e)}
+                        onPointerCancel={(e) => soltarControle(" ", e)}
+                        onPointerLeave={(e) => soltarControle(" ", e)}
+                    >
+                        A
+                    </button>
+                    <span>TIRO</span>
                 </div>
             </div>
-
-            <Player
-                x={jogo.player.x}
-                y={jogo.player.y}
-                largura={LARGURA_PLAYER}
-                altura={ALTURA_PLAYER}
-            />
-
-            {jogo.tiros.map(function (tiro) {
-                return (
-                    <Tiro1
-                        key={tiro.id}
-                        x={tiro.x}
-                        y={tiro.y}
-                    />
-                );
-            })}
-
-            {jogo.inimigos.map(function (inimigo) {
-                return (
-                    <Inimigo
-                        key={inimigo.id}
-                        x={inimigo.x}
-                        y={inimigo.y}
-                    />
-                );
-            })}
-
-            {jogo.gameOver && (
-                <div className={styles.gameOver}>
-                    <strong>Fim de jogo</strong>
-                    <span>Pontos: {jogo.pontos}</span>
-                    <button type="button" onClick={reiniciar}>Reiniciar</button>
-                </div>
-            )}
-        </Arena>
+        </div>
     )
 }
