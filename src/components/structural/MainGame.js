@@ -367,6 +367,12 @@ export default function MainGame() {
                 )}
             </Arena>
 
+            <div className={styles.desktopCommands}>
+                <span><kbd>WASD</kbd> mover</span>
+                <span><kbd>Espaco</kbd> tiro</span>
+                <span><kbd>R</kbd> reiniciar</span>
+            </div>
+
             <div className={styles.mobileControls} aria-label="Controles mobile">
                 <div className={styles.dPad}>
                     <span />
