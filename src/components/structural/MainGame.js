@@ -6,13 +6,14 @@ import Arena from "../ornamental/Arena";
 import Inimigo from "../entities/Inimigo";
 import {GameContext} from "../../contexts/gameContext";
 import styles from "../../styles/components/Arena.module.css";
+import {useGameAudio} from "../../hooks/useGameAudio";
 
 const LARGURA_PLAYER = 86;
 const ALTURA_PLAYER = 58;
 const LARGURA_TIRO = 18;
 const ALTURA_TIRO = 6;
-const LARGURA_INIMIGO = 36;
-const ALTURA_INIMIGO = 36;
+const LARGURA_INIMIGO = 44;
+const ALTURA_INIMIGO = 44;
 const VIDA_INICIAL = 100;
 const VELOCIDADE_PLAYER = 2;
 const VELOCIDADE_TIRO = 5;
@@ -62,6 +63,7 @@ export default function MainGame() {
     const [jogo, setJogo] = useState(function () {
         return criaEstadoInicial(larguraArena, alturaArena);
     });
+    const {audioAtivo, alternarAudio, registrarInteracao, tocarTiro} = useGameAudio();
     const teclasPressionadasRef = useRef(new Set());
     const ultimoTiroRef = useRef(0);
 
@@ -74,11 +76,16 @@ export default function MainGame() {
     const atira = useCallback(function () {
         const agora = Date.now();
 
+        if(jogo.gameOver){
+            return;
+        }
+
         if(agora - ultimoTiroRef.current < COOLDOWN_TIRO){
             return;
         }
 
         ultimoTiroRef.current = agora;
+        tocarTiro();
         setJogo(function (estadoAtual) {
             if(estadoAtual.gameOver){
                 return estadoAtual;
@@ -95,7 +102,7 @@ export default function MainGame() {
                 tiros: [...estadoAtual.tiros, novoTiro],
             };
         });
-    }, []);
+    }, [jogo.gameOver, tocarTiro]);
 
     useEffect(function () {
         function keyDown(e){
@@ -103,6 +110,7 @@ export default function MainGame() {
 
             if(["w", "a", "s", "d", " "].includes(tecla)){
                 e.preventDefault();
+                registrarInteracao();
             }
 
             if(["w", "a", "s", "d"].includes(tecla)){
@@ -133,7 +141,7 @@ export default function MainGame() {
             document.removeEventListener("keydown", keyDown);
             document.removeEventListener("keyup", keyUp);
         };
-    }, [atira, jogo.gameOver, reiniciar]);
+    }, [atira, jogo.gameOver, registrarInteracao, reiniciar]);
 
     useEffect(function () {
         if(jogo.gameOver){
@@ -267,7 +275,16 @@ export default function MainGame() {
                     </div>
                     <span className={styles.vidaTexto}>{jogo.vida}</span>
                 </div>
-                <strong className={styles.pontos}>Pontos: {jogo.pontos}</strong>
+                <div className={styles.hudDireita}>
+                    <button
+                        className={styles.audioButton}
+                        type="button"
+                        onClick={alternarAudio}
+                    >
+                        {audioAtivo ? "Som ligado" : "Som mudo"}
+                    </button>
+                    <strong className={styles.pontos}>Pontos: {jogo.pontos}</strong>
+                </div>
             </div>
 
             <Player

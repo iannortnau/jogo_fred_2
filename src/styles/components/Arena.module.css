@@ -85,6 +85,30 @@
     text-align: right;
 }
 
+.hudDireita{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.audioButton{
+    height: 28px;
+    min-width: 92px;
+    border: 1px solid rgba(103, 232, 249, 0.72);
+    border-radius: 8px;
+    color: #e0f2fe;
+    font-size: 12px;
+    font-weight: 700;
+    background: rgba(15, 23, 42, 0.72);
+    box-shadow: 0 0 12px rgba(34, 211, 238, 0.26);
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.audioButton:hover{
+    background: rgba(14, 116, 144, 0.58);
+}
+
 .pontos{
     font-size: 15px;
     letter-spacing: 0;
@@ -183,36 +207,16 @@
 .inimigoAsteroide{
     position: absolute;
     z-index: 6;
-    width: 36px;
-    height: 36px;
-    border-radius: 45% 55% 50% 42%;
-    background:
-        radial-gradient(circle at 28% 30%, #facc15 0 8%, transparent 9%),
-        radial-gradient(circle at 68% 64%, rgba(69, 26, 3, 0.55) 0 12%, transparent 13%),
-        linear-gradient(135deg, #f97316, #a16207 52%, #451a03);
-    box-shadow: 0 0 18px rgba(249, 115, 22, 0.58), inset -6px -7px 8px rgba(0, 0, 0, 0.32);
-    transform: rotate(-18deg);
-}
-
-.inimigoAsteroide span{
-    position: absolute;
-    display: block;
+    width: 44px;
+    height: 44px;
+    overflow: hidden;
+    border: 2px solid #f97316;
     border-radius: 999px;
-    background: rgba(69, 26, 3, 0.38);
-}
-
-.inimigoAsteroide span:first-child{
-    top: 9px;
-    left: 18px;
-    width: 8px;
-    height: 8px;
-}
-
-.inimigoAsteroide span:last-child{
-    right: 9px;
-    bottom: 8px;
-    width: 6px;
-    height: 6px;
+    background: #111827;
+    box-shadow:
+        0 0 16px rgba(249, 115, 22, 0.82),
+        0 0 24px rgba(248, 113, 113, 0.44),
+        inset 0 0 8px rgba(0, 0, 0, 0.45);
 }
 
 .gameOver{
