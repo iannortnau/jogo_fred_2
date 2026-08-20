@@ -1,3 +1,33 @@
+/* Tema unico do jogo: base espacial escura com molduras de madeira,
+   botoes 3D de fazendinha e brilho neon. Vale para as fases e para a fazenda. */
+:root {
+  --fundo: #050816;
+  --fundo-alto: #0d1730;
+  --painel-topo: rgba(19, 32, 60, 0.94);
+  --painel-baixo: rgba(4, 8, 22, 0.96);
+  --madeira: #b5762f;
+  --madeira-clara: #e0b070;
+  --madeira-escura: #6b4118;
+  --neon: #67e8f9;
+  --neon-fraco: rgba(103, 232, 249, 0.32);
+  --verde: #7ed957;
+  --verde-claro: #d9ffb0;
+  --verde-escuro: #2f7a12;
+  --amarelo: #facc15;
+  --vermelho: #f87171;
+  --vermelho-escuro: #7f1d1d;
+  --texto: #f8fafc;
+  --texto-suave: #cbd5e1;
+  --texto-fraco: #94a3b8;
+  --raio-p: 10px;
+  --raio: 16px;
+  --raio-g: 22px;
+  --borda: 3px;
+  --sombra-3d: 0 5px 0 rgba(2, 6, 23, 0.85);
+  --sombra-neon: 0 0 26px var(--neon-fraco);
+  --fonte: "Trebuchet MS", "Segoe UI", Arial, Helvetica, sans-serif;
+}
+
 html,
 body {
   padding: 0;
@@ -7,7 +37,16 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #050816;
+  color: var(--texto);
+  font-family: var(--fonte);
+  background-color: var(--fundo);
+  background-image:
+    radial-gradient(circle at 78% 12%, rgba(244, 114, 182, 0.14), transparent 22%),
+    radial-gradient(circle at 14% 82%, rgba(74, 222, 128, 0.14), transparent 24%),
+    radial-gradient(circle, rgba(255, 255, 255, 0.7) 1px, transparent 1px),
+    radial-gradient(circle, rgba(125, 211, 252, 0.6) 1px, transparent 1px),
+    linear-gradient(180deg, #050816 0%, #0a1026 55%, #050816 100%);
+  background-size: auto, auto, 96px 96px, 148px 148px, auto;
   overflow: hidden;
 }
 

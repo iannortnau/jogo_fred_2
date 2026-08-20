@@ -35,6 +35,25 @@ mantendo o mesmo nome de arquivo (o `id` do piloto).
 
 Atalhos: `WASD` move, `Espaco` atira, `R` reinicia, `T` volta para a selecao de piloto.
 
+## Meta-game: Fazenda de Ganja Intergalactica
+
+Depois de cada run do space shooter o jogo credita o resultado na fazenda
+(`/fazenda`), que roda como um tycoon/idle:
+
+- **Adubo Bruto**: cai dos Lorenzos abatidos (1 por abate + sacos de 3 que dao
+  para coletar em voo). O Pupu rende +20% quando e ele quem joga a fase.
+- **Estacao de Refino**: converte Bruto em Refinado. Plantar direto com bruto
+  tem 15% de chance de nascer uma Erva Daninha Neoliberal, que trava o lote e
+  drena 10% dos creditos por segundo ate ser banida no clique.
+- **Plantacao**: 6 lotes, tres variedades (Beck Estelar, Purple Cosmica e OG
+  Intergalactica) com tempo, custo e valor diferentes.
+- **Tripulacao**: cada piloto tem um papel de fazenda e ganha XP de operacao
+  jogando as fases; escalar ele aplica o bonus (ver `src/data/personagens.js`).
+- **Upgrades**: refinador, tanque, lampadas UV, irrigacao, auto-harvester e
+  alojamento (`src/data/fazenda.js`).
+
+O progresso fica salvo no `localStorage` sob a chave `fazenda-intergalactica-v1`.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
