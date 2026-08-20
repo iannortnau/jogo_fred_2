@@ -7,6 +7,7 @@ import Arena from "../ornamental/Arena";
 import Inimigo from "../entities/Inimigo";
 import PowerUp from "../entities/PowerUp";
 import SelecaoPersonagem from "./SelecaoPersonagem";
+import ControlesMobile from "./ControlesMobile";
 import {GameContext} from "../../contexts/gameContext";
 import {PERSONAGEM_PADRAO} from "../../data/personagens";
 import styles from "../../styles/components/Arena.module.css";
@@ -588,65 +589,10 @@ export default function MainGame() {
                 <span><kbd>T</kbd> trocar piloto</span>
             </div>
 
-            <div className={styles.mobileControls} aria-label="Controles mobile">
-                <div className={styles.dPad}>
-                    <span />
-                    <button
-                        type="button"
-                        onPointerDown={(e) => pressionarControle("w", e)}
-                        onPointerUp={(e) => soltarControle("w", e)}
-                        onPointerCancel={(e) => soltarControle("w", e)}
-                        onPointerLeave={(e) => soltarControle("w", e)}
-                    >
-                        ^
-                    </button>
-                    <span />
-                    <button
-                        type="button"
-                        onPointerDown={(e) => pressionarControle("a", e)}
-                        onPointerUp={(e) => soltarControle("a", e)}
-                        onPointerCancel={(e) => soltarControle("a", e)}
-                        onPointerLeave={(e) => soltarControle("a", e)}
-                    >
-                        &lt;
-                    </button>
-                    <span className={styles.dPadCenter} />
-                    <button
-                        type="button"
-                        onPointerDown={(e) => pressionarControle("d", e)}
-                        onPointerUp={(e) => soltarControle("d", e)}
-                        onPointerCancel={(e) => soltarControle("d", e)}
-                        onPointerLeave={(e) => soltarControle("d", e)}
-                    >
-                        &gt;
-                    </button>
-                    <span />
-                    <button
-                        type="button"
-                        onPointerDown={(e) => pressionarControle("s", e)}
-                        onPointerUp={(e) => soltarControle("s", e)}
-                        onPointerCancel={(e) => soltarControle("s", e)}
-                        onPointerLeave={(e) => soltarControle("s", e)}
-                    >
-                        v
-                    </button>
-                    <span />
-                </div>
-
-                <div className={styles.fireCluster}>
-                    <button
-                        className={styles.fireButton}
-                        type="button"
-                        onPointerDown={(e) => pressionarControle(" ", e)}
-                        onPointerUp={(e) => soltarControle(" ", e)}
-                        onPointerCancel={(e) => soltarControle(" ", e)}
-                        onPointerLeave={(e) => soltarControle(" ", e)}
-                    >
-                        A
-                    </button>
-                    <span>TIRO</span>
-                </div>
-            </div>
+            <ControlesMobile
+                aoPressionar={pressionarControle}
+                aoSoltar={soltarControle}
+            />
         </div>
     )
 }
