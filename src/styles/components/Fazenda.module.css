@@ -1,4 +1,5 @@
-/* Visual de fazendinha cartoon: grama, madeira e placas de papelao. */
+/* Fazenda com a mesma linguagem visual das fases: painel escuro espacial,
+   moldura de madeira, botoes 3D e brilho neon. */
 .fazenda{
     display: flex;
     flex-direction: column;
@@ -7,18 +8,32 @@
     max-height: min(100vh, 900px);
     padding: 18px;
     overflow-y: auto;
-    border: 8px solid #a9682c;
-    border-radius: 22px;
-    color: #33240f;
-    font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+    border: 6px solid var(--madeira);
+    border-radius: var(--raio-g);
+    color: var(--texto);
+    font-family: var(--fonte);
     background:
-        radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.28), transparent 12%),
-        radial-gradient(circle at 78% 8%, rgba(255, 255, 255, 0.22), transparent 14%),
-        repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.09) 0 14px, transparent 14px 32px),
-        linear-gradient(180deg, #9ad755 0%, #79c53f 45%, #5ea92f 100%);
+        radial-gradient(circle at 84% 10%, rgba(126, 217, 87, 0.18), transparent 26%),
+        radial-gradient(circle at 8% 88%, rgba(103, 232, 249, 0.16), transparent 26%),
+        linear-gradient(180deg, #071023 0%, #0e2018 52%, #050816 100%);
     box-shadow:
-        inset 0 0 0 4px #c98a45,
-        0 14px 30px rgba(24, 47, 12, 0.45);
+        inset 0 0 0 3px rgba(2, 6, 23, 0.75),
+        inset 0 0 44px rgba(2, 6, 23, 0.9),
+        0 0 34px var(--neon-fraco);
+}
+
+.topo,
+.recurso,
+.barraPlantio,
+.vagasAviso,
+.cardUpgrade,
+.cardTripulante,
+.blocoRisco,
+.maquina{
+    border: var(--borda) solid var(--madeira-escura);
+    border-radius: var(--raio);
+    background: linear-gradient(180deg, var(--painel-topo), var(--painel-baixo));
+    box-shadow: var(--sombra-3d), inset 0 2px 0 rgba(255, 255, 255, 0.08);
 }
 
 .topo{
@@ -27,11 +42,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: 10px 14px;
-    border: 3px solid #8a5623;
-    border-radius: 16px;
-    background: linear-gradient(180deg, #f6e2b8, #e6c98d);
-    box-shadow: 0 4px 0 #8a5623;
+    padding: 12px 14px;
 }
 
 .tituloGrupo{
@@ -41,21 +52,19 @@
 }
 
 .titulo{
-    color: #3f2a10;
     font-size: 24px;
-    letter-spacing: 0.01em;
-    text-shadow: 0 2px 0 rgba(255, 255, 255, 0.6);
+    text-shadow: 0 0 16px rgba(126, 217, 87, 0.6);
 }
 
 .botaoVoltar{
     padding: 10px 16px;
-    border: 3px solid #1f4f8a;
-    border-radius: 14px;
-    color: #ffffff;
+    border: var(--borda) solid #0e5c85;
+    border-radius: var(--raio-p);
+    color: #04111d;
     font-size: 13px;
     font-weight: 800;
-    background: linear-gradient(180deg, #5eb8f5, #2b86d8);
-    box-shadow: 0 4px 0 #1f4f8a;
+    background: linear-gradient(180deg, #a5f3fc, #22d3ee);
+    box-shadow: 0 4px 0 #0e5c85;
     cursor: pointer;
 }
 
@@ -70,10 +79,6 @@
     align-items: center;
     gap: 10px;
     padding: 10px 14px;
-    border: 3px solid #8a5623;
-    border-radius: 14px;
-    background: linear-gradient(180deg, #fff8e6, #f0dcb0);
-    box-shadow: 0 4px 0 #8a5623;
 }
 
 .recursoIcone{
@@ -82,32 +87,31 @@
 
 .recurso strong{
     display: block;
-    color: #3f2a10;
     font-size: 20px;
     line-height: 1.1;
 }
 
 .recurso strong small{
-    color: #7a5c2e;
+    color: var(--texto-fraco);
     font-size: 12px;
     font-weight: 700;
 }
 
 .recurso span{
-    color: #7a5c2e;
+    color: var(--texto-fraco);
     font-size: 12px;
     font-weight: 700;
 }
 
 .alertaErva{
     padding: 10px 14px;
-    border: 3px solid #b91c1c;
-    border-radius: 14px;
-    color: #7f1d1d;
+    border: var(--borda) solid var(--vermelho-escuro);
+    border-radius: var(--raio-p);
+    color: #fecaca;
     font-size: 13px;
     font-weight: 700;
-    background: linear-gradient(180deg, #fee2e2, #fca5a5);
-    box-shadow: 0 4px 0 #b91c1c;
+    background: linear-gradient(180deg, rgba(127, 29, 29, 0.7), rgba(69, 10, 10, 0.9));
+    box-shadow: 0 4px 0 rgba(69, 10, 10, 0.9);
 }
 
 .abas{
@@ -115,10 +119,10 @@
     flex-wrap: wrap;
     gap: 8px;
     padding: 8px;
-    border: 3px solid #8a5623;
-    border-radius: 16px;
-    background: linear-gradient(180deg, #c98a45, #a9682c);
-    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.28);
+    border: var(--borda) solid var(--madeira-escura);
+    border-radius: var(--raio);
+    background: linear-gradient(180deg, var(--madeira), #8a5623);
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.24), var(--sombra-3d);
 }
 
 .aba{
@@ -126,20 +130,22 @@
     align-items: center;
     gap: 6px;
     padding: 9px 14px;
-    border: 3px solid #7a4a1d;
-    border-radius: 12px;
-    color: #4a3416;
+    border: var(--borda) solid rgba(2, 6, 23, 0.7);
+    border-radius: var(--raio-p);
+    color: var(--texto-suave);
     font-family: inherit;
     font-size: 13px;
     font-weight: 800;
-    background: linear-gradient(180deg, #ffeec4, #e8cf9a);
-    box-shadow: 0 3px 0 #7a4a1d;
+    background: linear-gradient(180deg, #1b2c4e, #0a1226);
+    box-shadow: 0 3px 0 rgba(2, 6, 23, 0.85);
     cursor: pointer;
 }
 
 .abaAtiva{
-    color: #14400a;
-    background: linear-gradient(180deg, #b6f06f, #6fbf2f);
+    border-color: var(--verde-escuro);
+    color: #0f2e08;
+    background: linear-gradient(180deg, var(--verde-claro), var(--verde));
+    box-shadow: 0 3px 0 var(--verde-escuro), 0 0 18px rgba(126, 217, 87, 0.55);
 }
 
 .painel{
@@ -155,10 +161,6 @@
     justify-content: space-between;
     gap: 10px;
     padding: 10px 12px;
-    border: 3px solid #8a5623;
-    border-radius: 16px;
-    background: linear-gradient(180deg, #fff8e6, #f0dcb0);
-    box-shadow: 0 4px 0 #8a5623;
 }
 
 .chips{
@@ -172,45 +174,44 @@
     align-items: center;
     gap: 6px;
     padding: 8px 12px;
-    border: 3px solid #7a4a1d;
-    border-radius: 12px;
-    color: #3f2a10;
+    border: var(--borda) solid rgba(2, 6, 23, 0.7);
+    border-radius: var(--raio-p);
+    color: var(--texto);
     font-family: inherit;
     font-size: 12px;
     font-weight: 700;
-    background: linear-gradient(180deg, #ffffff, #ecdcb8);
-    box-shadow: 0 3px 0 #7a4a1d;
+    background: linear-gradient(180deg, #1b2c4e, #0a1226);
+    box-shadow: 0 3px 0 rgba(2, 6, 23, 0.85);
     cursor: pointer;
 }
 
 .chip strong{
-    color: #7a5c2e;
+    color: var(--texto-fraco);
     font-size: 11px;
 }
 
 .chipAtivo{
-    border-color: #2f7a12;
-    background: linear-gradient(180deg, #d9ffb0, var(--cultura-cor, #7ed957));
-    box-shadow: 0 3px 0 #2f7a12;
+    border-color: var(--cultura-cor, var(--verde));
+    box-shadow: 0 3px 0 rgba(2, 6, 23, 0.85), 0 0 16px var(--cultura-cor, var(--verde));
 }
 
 .switchBruto{
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    color: #4a3416;
+    color: var(--texto-suave);
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
 }
 
 .riscoAlto{
-    color: #b91c1c;
+    color: #fca5a5;
     font-weight: 800;
 }
 
 .riscoZero{
-    color: #17690f;
+    color: var(--verde);
     font-weight: 800;
 }
 
@@ -227,15 +228,15 @@
     gap: 7px;
     min-height: 176px;
     padding: 10px;
-    border: 4px solid #6b4118;
-    border-radius: 16px;
+    border: var(--borda) solid var(--madeira-escura);
+    border-radius: var(--raio);
     color: #f7ead2;
     font-family: inherit;
     text-align: center;
     background:
-        repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.12) 0 10px, transparent 10px 26px),
-        linear-gradient(180deg, #8a5a2e, #5e3a1a);
-    box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.16), 0 5px 0 #4a2d13;
+        repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.16) 0 10px, transparent 10px 26px),
+        linear-gradient(180deg, #6d4523, #3d2513);
+    box-shadow: var(--sombra-3d), inset 0 2px 0 rgba(255, 255, 255, 0.12);
 }
 
 .loteVazio{
@@ -244,32 +245,40 @@
 }
 
 .loteVazio:hover:enabled{
-    border-color: #b6f06f;
+    border-color: var(--verde);
     transform: translateY(-2px);
 }
 
 .loteVazio:disabled{
-    color: #d8c6a8;
+    color: #cbb794;
     cursor: not-allowed;
-    opacity: 0.75;
+    opacity: 0.8;
 }
 
 .lotePronto{
-    border-color: #ffe066;
+    border-color: var(--amarelo);
     background:
-        repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.1) 0 10px, transparent 10px 26px),
-        linear-gradient(180deg, #4f8f22, #2f6a15);
-    box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.2), 0 0 22px rgba(255, 224, 102, 0.75), 0 5px 0 #24500f;
+        repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.14) 0 10px, transparent 10px 26px),
+        linear-gradient(180deg, #3f7a1c, #1f4d10);
+    box-shadow: var(--sombra-3d), 0 0 22px rgba(250, 204, 21, 0.7);
 }
 
 .loteInfectado{
-    border-color: #ef4444;
-    background: linear-gradient(180deg, #7f1d1d, #431010);
+    border-color: var(--vermelho);
+    background: linear-gradient(180deg, #6b1717, #2c0c0c);
     animation: pulsaErva 700ms ease-in-out infinite alternate;
 }
 
+.loteBloqueado{
+    border-style: dashed;
+    border-color: rgba(103, 232, 249, 0.5);
+    color: var(--texto-fraco);
+    background: linear-gradient(180deg, rgba(19, 32, 60, 0.8), rgba(4, 8, 22, 0.9));
+    box-shadow: none;
+}
+
 .loteTitulo{
-    color: #f0dcb0;
+    color: var(--madeira-clara);
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.08em;
@@ -277,9 +286,9 @@
 }
 
 .loteIcone{
-    font-size: 36px;
+    font-size: 34px;
     line-height: 1;
-    filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.5));
+    filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.55));
 }
 
 .loteNome{
@@ -287,7 +296,7 @@
 }
 
 .loteEstado{
-    color: #f4e6cc;
+    color: #f0e2c8;
     font-size: 12px;
     font-weight: 700;
 }
@@ -297,16 +306,16 @@
     width: 100%;
     height: 12px;
     overflow: hidden;
-    border: 2px solid #4a2d13;
+    border: 2px solid rgba(2, 6, 23, 0.85);
     border-radius: 999px;
-    background: rgba(0, 0, 0, 0.34);
+    background: rgba(2, 6, 23, 0.6);
 }
 
 .progressoTrilho span{
     display: block;
     height: 100%;
     border-radius: 999px;
-    background: linear-gradient(180deg, #d9ffb0, var(--cultura-cor, #7ed957));
+    background: linear-gradient(180deg, var(--verde-claro), var(--cultura-cor, var(--verde)));
     transition: width 180ms linear;
 }
 
@@ -315,60 +324,45 @@
 .botaoBanir,
 .botaoComprar,
 .botaoEscalar,
-.botaoDispensar,
-.botaoPrincipal,
-.refinoBotoes button{
+.botaoDispensar{
     padding: 9px 14px;
-    border: 3px solid #2f7a12;
-    border-radius: 12px;
-    color: #ffffff;
+    border: var(--borda) solid var(--verde-escuro);
+    border-radius: var(--raio-p);
+    color: #0f2e08;
     font-family: inherit;
     font-size: 13px;
     font-weight: 800;
-    background: linear-gradient(180deg, #8fe04a, #55a520);
-    box-shadow: 0 4px 0 #2f7a12;
+    background: linear-gradient(180deg, var(--verde-claro), var(--verde));
+    box-shadow: 0 4px 0 var(--verde-escuro);
     cursor: pointer;
 }
 
-.botaoTurbo{
-    border-color: #8a5623;
-    color: #3f2a10;
+.botaoTurbo,
+.botaoDispensar{
+    border-color: rgba(2, 6, 23, 0.8);
+    color: var(--texto);
     font-size: 11px;
-    background: linear-gradient(180deg, #ffeec4, #e8cf9a);
-    box-shadow: 0 3px 0 #8a5623;
+    background: linear-gradient(180deg, #1b2c4e, #0a1226);
+    box-shadow: 0 3px 0 rgba(2, 6, 23, 0.85);
 }
 
 .botaoBanir{
-    border-color: #7f1d1d;
+    border-color: var(--vermelho-escuro);
+    color: #fff1f2;
     background: linear-gradient(180deg, #fb7185, #be123c);
-    box-shadow: 0 4px 0 #7f1d1d;
-}
-
-.botaoDispensar{
-    border-color: #8a5623;
-    color: #3f2a10;
-    background: linear-gradient(180deg, #ffeec4, #e8cf9a);
-    box-shadow: 0 4px 0 #8a5623;
-}
-
-.refinoBotoes button:first-child{
-    border-color: #8a5623;
-    color: #3f2a10;
-    background: linear-gradient(180deg, #ffeec4, #e8cf9a);
-    box-shadow: 0 4px 0 #8a5623;
+    box-shadow: 0 4px 0 var(--vermelho-escuro);
 }
 
 .botaoColher:disabled,
 .botaoTurbo:disabled,
 .botaoComprar:disabled,
-.botaoEscalar:disabled,
-.refinoBotoes button:disabled{
+.botaoEscalar:disabled{
     opacity: 0.5;
     cursor: not-allowed;
 }
 
 .ervaIcone{
-    font-size: 36px;
+    font-size: 34px;
 }
 
 .ervaNome{
@@ -377,33 +371,20 @@
 }
 
 .ervaAviso{
-    color: #fecaca;
+    color: #fca5a5;
     font-size: 11px;
     font-weight: 700;
 }
 
-.blocoRisco{
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
-    padding: 16px;
-    border: 4px solid #3f5a3a;
-    border-radius: 16px;
-    background:
-        repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0 3px, transparent 3px 8px),
-        linear-gradient(180deg, #7d9a6d, #55704c);
-    box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.25), 0 6px 0 #35492f;
-}
-
 .blocoTitulo{
     display: block;
-    color: #3f2a10;
+    color: var(--texto);
     font-size: 16px;
 }
 
 .blocoTexto{
     display: block;
-    color: #6b4f22;
+    color: var(--texto-fraco);
     font-size: 12px;
     font-weight: 600;
     line-height: 1.45;
@@ -420,20 +401,21 @@
     flex-direction: column;
     gap: 12px;
     padding: 16px;
-    border: 4px solid #3f5a3a;
-    border-radius: 18px;
-    background:
-        repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0 3px, transparent 3px 8px),
-        linear-gradient(180deg, #86a575, #526c48);
-    box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.28), 0 7px 0 #35492f;
+}
+
+.blocoRisco{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 16px;
 }
 
 .maquinaVidros{
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-end;
     justify-content: center;
     gap: 6px;
-    flex-wrap: wrap;
 }
 
 .tanque{
@@ -446,9 +428,9 @@
 .tanqueTampa{
     width: 118px;
     height: 14px;
-    border: 3px solid #3f5a3a;
+    border: var(--borda) solid rgba(2, 6, 23, 0.8);
     border-radius: 999px;
-    background: linear-gradient(180deg, #b6c9a6, #6f8f63);
+    background: linear-gradient(180deg, #93a7c9, #4c5f80);
 }
 
 .tanqueCorpo{
@@ -459,21 +441,20 @@
     width: 110px;
     height: 132px;
     overflow: hidden;
-    border: 3px solid rgba(255, 255, 255, 0.65);
+    border: var(--borda) solid rgba(226, 240, 255, 0.6);
     border-radius: 12px;
     background:
-        linear-gradient(100deg, rgba(255, 255, 255, 0.42) 0 12%, rgba(255, 255, 255, 0.06) 12% 60%, rgba(255, 255, 255, 0.3) 60% 100%),
-        rgba(226, 240, 216, 0.35);
-    box-shadow: inset 0 0 14px rgba(255, 255, 255, 0.6);
+        linear-gradient(100deg, rgba(255, 255, 255, 0.32) 0 12%, rgba(255, 255, 255, 0.05) 12% 60%, rgba(255, 255, 255, 0.22) 60% 100%),
+        rgba(103, 232, 249, 0.12);
+    box-shadow: inset 0 0 16px rgba(103, 232, 249, 0.35);
 }
 
 .tanqueCorpo strong{
     position: relative;
     z-index: 2;
     margin-bottom: 8px;
-    color: #ffffff;
     font-size: 22px;
-    text-shadow: 0 2px 3px rgba(0, 0, 0, 0.65);
+    text-shadow: 0 2px 3px rgba(0, 0, 0, 0.75);
 }
 
 .tanqueNivelBruto,
@@ -487,8 +468,8 @@
 
 .tanqueNivelBruto{
     background:
-        repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.12) 0 6px, transparent 6px 14px),
-        linear-gradient(180deg, #a9743c, #6b4118);
+        repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.16) 0 6px, transparent 6px 14px),
+        linear-gradient(180deg, #9c6a33, #52320f);
 }
 
 .tanqueNivelRefinado{
@@ -497,14 +478,14 @@
 
 .tanqueRotulo{
     padding: 3px 10px;
-    border: 2px solid #8a5623;
+    border: 2px solid var(--madeira-escura);
     border-radius: 999px;
-    color: #3f2a10;
+    color: var(--madeira-clara);
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    background: linear-gradient(180deg, #ffeec4, #e8cf9a);
+    background: rgba(4, 8, 22, 0.9);
 }
 
 .encanamento{
@@ -519,9 +500,9 @@
 .canoBaixo{
     width: 62px;
     height: 12px;
-    border: 2px solid #6b7280;
+    border: 2px solid rgba(2, 6, 23, 0.8);
     border-radius: 999px;
-    background: linear-gradient(180deg, #e5e7eb, #9ca3af);
+    background: linear-gradient(180deg, #cbd5e1, #64748b);
 }
 
 .filtro{
@@ -530,24 +511,24 @@
     width: 26px;
     height: 46px;
     overflow: hidden;
-    border: 2px solid #6b7280;
+    border: 2px solid rgba(2, 6, 23, 0.8);
     border-radius: 6px;
-    background: linear-gradient(180deg, #f3f4f6, #cbd5e1);
+    background: linear-gradient(180deg, #e2e8f0, #94a3b8);
 }
 
 .filtro span{
     display: block;
     width: 100%;
-    background: repeating-linear-gradient(180deg, #c9a227 0 3px, #a97c1a 3px 6px);
+    background: repeating-linear-gradient(180deg, #d9a441 0 3px, #a9791f 3px 6px);
     transition: height 200ms linear;
 }
 
 .valvula{
     width: 30px;
     height: 30px;
-    border: 3px solid #6b7280;
+    border: var(--borda) solid rgba(2, 6, 23, 0.8);
     border-radius: 999px;
-    background: radial-gradient(circle at 34% 30%, #f9fafb, #9ca3af);
+    background: radial-gradient(circle at 34% 30%, #f8fafc, #64748b);
 }
 
 .maquinaControles{
@@ -557,44 +538,44 @@
     justify-content: center;
     gap: 12px;
     padding: 12px;
-    border: 3px solid #3f5a3a;
-    border-radius: 14px;
-    background: linear-gradient(180deg, #cfd8c2, #9fb392);
-    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.5);
+    border: var(--borda) solid rgba(2, 6, 23, 0.7);
+    border-radius: var(--raio);
+    background: linear-gradient(180deg, #16233f, #0a1226);
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.1);
 }
 
 .placaMetal{
     padding: 10px 16px;
-    border: 3px solid #94a3b8;
-    border-radius: 8px;
-    color: #1f2937;
+    border: var(--borda) solid rgba(2, 6, 23, 0.8);
+    border-radius: var(--raio-p);
+    color: #0b1220;
     font-size: 13px;
     font-weight: 800;
     letter-spacing: 0.12em;
-    background: linear-gradient(180deg, #f8fafc, #cbd5e1);
-    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.8);
+    background: linear-gradient(180deg, #e2e8f0, #94a3b8);
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.7);
 }
 
 .botaoLatao{
     width: 84px;
     height: 84px;
-    border: 4px solid #8a6417;
+    border: 4px solid #7a5613;
     border-radius: 999px;
-    color: #4a3416;
+    color: #3f2a10;
     font-family: inherit;
     font-size: 11px;
     font-weight: 800;
     line-height: 1.25;
     background: radial-gradient(circle at 34% 28%, #ffe9a8, #d9a441 60%, #a9791f);
-    box-shadow: 0 5px 0 #7a5613;
+    box-shadow: 0 5px 0 #4d3608;
     cursor: pointer;
 }
 
 .botaoLataoVerde{
-    border-color: #2f7a12;
-    color: #14400a;
-    background: radial-gradient(circle at 34% 28%, #dcfce7, #7ed957 58%, #4b9c22);
-    box-shadow: 0 5px 0 #2f7a12;
+    border-color: var(--verde-escuro);
+    color: #0f2e08;
+    background: radial-gradient(circle at 34% 28%, var(--verde-claro), var(--verde) 58%, #4b9c22);
+    box-shadow: 0 5px 0 #1d5a08;
 }
 
 .botaoLatao:disabled{
@@ -609,10 +590,10 @@
     justify-content: center;
     width: 92px;
     height: 92px;
-    border: 4px solid #9ca3af;
+    border: 4px solid rgba(2, 6, 23, 0.8);
     border-radius: 999px;
-    background: radial-gradient(circle at 50% 40%, #ffffff, #d1d5db);
-    box-shadow: inset 0 0 10px rgba(15, 23, 42, 0.28);
+    background: radial-gradient(circle at 50% 40%, #e2e8f0, #94a3b8);
+    box-shadow: inset 0 0 12px rgba(2, 6, 23, 0.5);
 }
 
 .medidorPonteiro{
@@ -632,10 +613,10 @@
     bottom: 8px;
     padding: 2px 7px;
     border-radius: 4px;
-    color: #bbf7d0;
+    color: var(--verde-claro);
     font-size: 11px;
     font-weight: 800;
-    background: #0f172a;
+    background: #050816;
 }
 
 .maquinaRodape{
@@ -645,10 +626,9 @@
 }
 
 .filaTexto{
-    color: #f0f6ea;
+    color: var(--texto-suave);
     font-size: 13px;
     font-weight: 800;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
     white-space: nowrap;
 }
 
@@ -664,39 +644,42 @@
 
 .domoVidro{
     position: absolute;
-    inset: 0 0 22px 0;
-    border: 3px solid rgba(255, 255, 255, 0.75);
+    inset: 0 0 34px 0;
+    border: var(--borda) solid rgba(226, 240, 255, 0.6);
     border-radius: 999px 999px 14px 14px;
-    background: linear-gradient(120deg, rgba(255, 255, 255, 0.42) 0 14%, rgba(255, 255, 255, 0.08) 14% 62%, rgba(255, 255, 255, 0.32) 62% 100%);
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.3) 0 14%, rgba(103, 232, 249, 0.1) 14% 62%, rgba(255, 255, 255, 0.24) 62% 100%);
 }
 
 .domoPlanta{
     position: absolute;
-    bottom: 44px;
+    bottom: 56px;
     font-size: 42px;
-    filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.45));
+    filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.5));
 }
 
 .domoTerra{
     position: absolute;
-    bottom: 16px;
+    bottom: 30px;
     width: 132px;
     height: 34px;
-    border: 3px solid #4a2d13;
+    border: var(--borda) solid var(--madeira-escura);
     border-radius: 999px;
-    background: linear-gradient(180deg, #8a5a2e, #5e3a1a);
+    background: linear-gradient(180deg, #6d4523, #3d2513);
 }
 
 .domoTexto{
     position: absolute;
-    bottom: 52px;
+    bottom: 4px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    color: #f8fafc;
-    font-size: 17px;
+    padding: 4px 12px;
+    border: 2px solid rgba(2, 6, 23, 0.8);
+    border-radius: 999px;
+    font-size: 15px;
     font-weight: 800;
-    text-shadow: 0 2px 3px rgba(0, 0, 0, 0.8);
+    background: linear-gradient(180deg, #1b2c4e, #0a1226);
+    box-shadow: 0 2px 0 rgba(2, 6, 23, 0.85);
 }
 
 .domoTexto em{
@@ -715,20 +698,19 @@
 }
 
 .riscoTitulo{
-    color: #f0f6ea;
+    color: var(--texto-suave);
     font-size: 13px;
     letter-spacing: 0.12em;
     text-align: center;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .leds{
     display: flex;
     gap: 4px;
     padding: 7px;
-    border: 3px solid #1f2937;
-    border-radius: 10px;
-    background: #0b1220;
+    border: var(--borda) solid rgba(2, 6, 23, 0.85);
+    border-radius: var(--raio-p);
+    background: #04070f;
 }
 
 .leds span{
@@ -743,7 +725,7 @@
 }
 
 .ledApagado{
-    background: rgba(148, 163, 184, 0.18);
+    background: rgba(148, 163, 184, 0.16);
 }
 
 .placaErva{
@@ -752,15 +734,15 @@
     align-items: center;
     gap: 4px;
     padding: 10px;
-    border: 3px solid #8a5623;
-    border-radius: 12px;
+    border: var(--borda) solid var(--madeira-escura);
+    border-radius: var(--raio-p);
     text-align: center;
-    background: linear-gradient(180deg, #fff8e6, #e8cf9a);
-    box-shadow: 0 4px 0 #8a5623;
+    background: linear-gradient(180deg, rgba(19, 32, 60, 0.94), rgba(4, 8, 22, 0.96));
+    box-shadow: 0 4px 0 rgba(2, 6, 23, 0.85);
 }
 
 .placaErva strong{
-    color: #7f1d1d;
+    color: #fca5a5;
     font-size: 12px;
     letter-spacing: 0.06em;
 }
@@ -774,15 +756,10 @@
     flex-direction: column;
     gap: 3px;
     padding: 10px 14px;
-    border: 3px solid #8a5623;
-    border-radius: 14px;
-    color: #3f2a10;
-    background: linear-gradient(180deg, #fff8e6, #f0dcb0);
-    box-shadow: 0 4px 0 #8a5623;
 }
 
 .vagasAviso span{
-    color: #6b4f22;
+    color: var(--texto-fraco);
     font-size: 12px;
     font-weight: 600;
 }
@@ -798,16 +775,11 @@
     flex-direction: column;
     gap: 8px;
     padding: 12px;
-    border: 3px solid #8a5623;
-    border-radius: 16px;
-    color: #3f2a10;
-    background: linear-gradient(180deg, #fff8e6, #f0dcb0);
-    box-shadow: 0 5px 0 #8a5623;
 }
 
 .cardTripulanteAtivo{
-    border-color: #2f7a12;
-    box-shadow: 0 5px 0 #2f7a12, 0 0 20px rgba(143, 224, 74, 0.7);
+    border-color: var(--nave-casco, var(--verde));
+    box-shadow: var(--sombra-3d), 0 0 22px var(--nave-brilho, rgba(126, 217, 87, 0.6));
 }
 
 .tripulanteTopo{
@@ -822,9 +794,9 @@
     width: 46px;
     height: 46px;
     overflow: hidden;
-    border: 3px solid var(--nave-casco, #55a520);
+    border: var(--borda) solid var(--nave-casco, var(--verde));
     border-radius: 999px;
-    background: #e8cf9a;
+    background: rgba(15, 23, 42, 0.7);
 }
 
 .tripulanteIdentidade{
@@ -835,7 +807,7 @@
 }
 
 .tripulantePapel{
-    color: #6b4f22;
+    color: var(--nave-casco, var(--verde));
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.04em;
@@ -844,16 +816,16 @@
 
 .tripulanteNivel{
     padding: 5px 10px;
-    border: 3px solid #2f7a12;
+    border: var(--borda) solid var(--verde-escuro);
     border-radius: 999px;
-    color: #ffffff;
+    color: #0f2e08;
     font-size: 12px;
     font-weight: 800;
-    background: linear-gradient(180deg, #8fe04a, #55a520);
+    background: linear-gradient(180deg, var(--nave-casco-claro, var(--verde-claro)), var(--nave-casco, var(--verde)));
 }
 
 .tripulanteXp{
-    color: #6b4f22;
+    color: var(--texto-fraco);
     font-size: 11px;
     font-weight: 700;
 }
@@ -869,11 +841,6 @@
     flex-direction: column;
     gap: 9px;
     padding: 12px;
-    border: 3px solid #8a5623;
-    border-radius: 16px;
-    color: #3f2a10;
-    background: linear-gradient(180deg, #fff8e6, #f0dcb0);
-    box-shadow: 0 5px 0 #8a5623;
 }
 
 .upgradeTopo{
@@ -888,17 +855,17 @@
 
 .upgradeNivel{
     display: block;
-    color: #6b4f22;
+    color: var(--texto-fraco);
     font-size: 12px;
     font-weight: 700;
 }
 
 @keyframes pulsaErva{
     from{
-        box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.14), 0 0 10px rgba(248, 113, 113, 0.6);
+        box-shadow: var(--sombra-3d), 0 0 10px rgba(248, 113, 113, 0.6);
     }
     to{
-        box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.14), 0 0 26px rgba(248, 113, 113, 0.95);
+        box-shadow: var(--sombra-3d), 0 0 26px rgba(248, 113, 113, 0.95);
     }
 }
 
@@ -907,7 +874,7 @@
         width: 100vw;
         max-height: 100vh;
         padding: 12px;
-        border-width: 6px;
+        border-width: 5px;
         border-radius: 0;
     }
 
@@ -920,13 +887,4 @@
     .upgrades{
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     }
-}
-
-.loteBloqueado{
-    border-style: dashed;
-    border-color: rgba(255, 255, 255, 0.5);
-    color: #f0dcb0;
-    background: linear-gradient(180deg, rgba(63, 90, 58, 0.75), rgba(53, 73, 47, 0.85));
-    box-shadow: none;
-    opacity: 0.85;
 }
