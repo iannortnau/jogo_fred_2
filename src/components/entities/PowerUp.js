@@ -6,6 +6,7 @@ const LABELS = {
     tiroDuplo: "x2",
     escudo: "S",
     super: "",
+    adubo: "🌿",
 };
 
 export default function PowerUp(props) {

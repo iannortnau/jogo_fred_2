@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useRef, useState} from "react";
 import Image from "next/image";
+import Link from "next/link";
 import Player from "../entities/Player";
 import ControlesMobile from "./ControlesMobile";
 import {PERSONAGENS} from "../../data/personagens";
@@ -123,7 +124,12 @@ export default function SelecaoPersonagem(props) {
         <div className={styles.gameLayout}>
             <div className={styles.selecao}>
                 <div className={styles.selecaoTopo}>
-                    <strong>Escolha seu piloto</strong>
+                    <div className={styles.selecaoCabecalho}>
+                        <strong>Escolha seu piloto</strong>
+                        <Link href="/fazenda">
+                            <a className={styles.linkFazenda}>🌿 Ir para a Fazenda</a>
+                        </Link>
+                    </div>
                     <span>Cada piloto tem nave, foto e atributos proprios</span>
                 </div>
 

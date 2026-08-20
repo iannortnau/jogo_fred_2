@@ -1,5 +1,6 @@
 import {useCallback, useContext, useEffect, useRef, useState} from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { v1 as uuidv1 } from "uuid";
 import Tiro1 from "../entities/Tiro1";
 import Player from "../entities/Player";
@@ -10,6 +11,8 @@ import SelecaoPersonagem from "./SelecaoPersonagem";
 import ControlesMobile from "./ControlesMobile";
 import {GameContext} from "../../contexts/gameContext";
 import {PERSONAGEM_PADRAO} from "../../data/personagens";
+import {ADUBO_POR_LORENZO, ADUBO_POR_SACO, CHANCE_SACO_ADUBO} from "../../data/fazenda";
+import {useFazenda} from "../../contexts/fazendaContext";
 import styles from "../../styles/components/Arena.module.css";
 import {useGameAudio} from "../../hooks/useGameAudio";
 
@@ -64,8 +67,8 @@ function criaInimigo(larguraArena, alturaArena, pontos = 0, visivel = false){
     };
 }
 
-function criaPowerUp(x, y){
-    const tipo = TIPOS_POWER_UP[Math.floor(Math.random() * TIPOS_POWER_UP.length)];
+function criaPowerUp(x, y, tipoForcado){
+    const tipo = tipoForcado || TIPOS_POWER_UP[Math.floor(Math.random() * TIPOS_POWER_UP.length)];
 
     return {
         id: uuidv1(),
@@ -95,6 +98,8 @@ function criaEstadoInicial(larguraArena, alturaArena, personagem){
         vida: vidaMaxima,
         vidaMaxima,
         pontos: 0,
+        lorenzos: 0,
+        adubo: 0,
         spawnTimer: 0,
         gameOver: false,
     };
@@ -107,6 +112,9 @@ export default function MainGame() {
         return criaEstadoInicial(larguraArena, alturaArena, null);
     });
     const {audioAtivo, alternarAudio, registrarInteracao, tocarPowerUp, tocarTiro} = useGameAudio();
+    const {registrarRun} = useFazenda();
+    const [balanco, setBalanco] = useState(null);
+    const runCreditadaRef = useRef(false);
     const teclasPressionadasRef = useRef(new Set());
     const ultimoTiroRef = useRef(0);
     const tiroControleRef = useRef(null);
@@ -122,6 +130,8 @@ export default function MainGame() {
         teclasPressionadasRef.current.clear();
         pararTiroControle();
         ultimoTiroRef.current = 0;
+        runCreditadaRef.current = false;
+        setBalanco(null);
         setJogo(criaEstadoInicial(larguraArena, alturaArena, personagem));
     }, [alturaArena, larguraArena, pararTiroControle, personagem]);
 
@@ -130,6 +140,8 @@ export default function MainGame() {
         pararTiroControle();
         ultimoTiroRef.current = 0;
         registrarInteracao();
+        runCreditadaRef.current = false;
+        setBalanco(null);
         setPersonagem(novoPersonagem);
         setJogo(criaEstadoInicial(larguraArena, alturaArena, novoPersonagem));
     }, [alturaArena, larguraArena, pararTiroControle, registrarInteracao]);
@@ -138,6 +150,8 @@ export default function MainGame() {
         teclasPressionadasRef.current.clear();
         pararTiroControle();
         ultimoTiroRef.current = 0;
+        runCreditadaRef.current = false;
+        setBalanco(null);
         setPersonagem(null);
     }, [pararTiroControle]);
 
@@ -330,6 +344,8 @@ export default function MainGame() {
                 const novosPowerUps = [];
                 const chancePowerUp = Math.min(0.9, CHANCE_POWER_UP * atributos.sortePowerUp);
                 let pontosGanhos = 0;
+                let lorenzosAbatidos = 0;
+                let aduboGanho = 0;
 
                 tiros.forEach(function (tiro) {
                     inimigos.forEach(function (inimigo) {
@@ -353,9 +369,15 @@ export default function MainGame() {
 
                             inimigosRemovidos.add(inimigo.id);
                             pontosGanhos += Math.round((tiro.super ? 15 : 10) * atributos.pontos);
+                            lorenzosAbatidos++;
+                            aduboGanho += ADUBO_POR_LORENZO;
 
                             if(Math.random() < chancePowerUp){
                                 novosPowerUps.push(criaPowerUp(inimigo.x, inimigo.y));
+                            }
+
+                            if(Math.random() < CHANCE_SACO_ADUBO){
+                                novosPowerUps.push(criaPowerUp(inimigo.x, inimigo.y, "adubo"));
                             }
                         }
                     });
@@ -416,6 +438,10 @@ export default function MainGame() {
                     coletouPowerUp = true;
                     pontos += Math.round(5 * atributos.pontos);
 
+                    if(powerUp.tipo === "adubo"){
+                        aduboGanho += ADUBO_POR_SACO;
+                    }
+
                     if(powerUp.tipo === "vida"){
                         vida = Math.min(vidaMaxima, vida + 25);
                     }
@@ -467,6 +493,8 @@ export default function MainGame() {
                     vida,
                     vidaMaxima,
                     pontos,
+                    lorenzos: estadoAtual.lorenzos + lorenzosAbatidos,
+                    adubo: estadoAtual.adubo + aduboGanho,
                     spawnTimer,
                     gameOver: vida <= 0,
                 };
@@ -477,6 +505,20 @@ export default function MainGame() {
             clearInterval(intervalo);
         };
     }, [alturaArena, intervaloDeAtualizacao, jogo.gameOver, larguraArena, limitaX, limitaY, personagem, tocarPowerUp]);
+
+    useEffect(function () {
+        if(!personagem || !jogo.gameOver || runCreditadaRef.current){
+            return;
+        }
+
+        runCreditadaRef.current = true;
+        setBalanco(registrarRun({
+            pilotoId: personagem.id,
+            lorenzos: jogo.lorenzos,
+            adubo: jogo.adubo,
+            pontos: jogo.pontos,
+        }));
+    }, [jogo.adubo, jogo.gameOver, jogo.lorenzos, jogo.pontos, personagem, registrarRun]);
 
     if(!personagem){
         return (
@@ -525,6 +567,7 @@ export default function MainGame() {
                             {audioAtivo ? "Som ligado" : "Som mudo"}
                         </button>
                         <strong className={styles.pontos}>Pontos: {jogo.pontos}</strong>
+                        <strong className={styles.aduboHud}>Adubo: {jogo.adubo}</strong>
                     </div>
                 </div>
 
@@ -574,9 +617,25 @@ export default function MainGame() {
                     <div className={styles.gameOver}>
                         <strong>Fim de jogo</strong>
                         <span>{personagem.nome} fez {jogo.pontos} pontos</span>
+
+                        <div className={styles.balanco}>
+                            <span><em>Lorenzos abatidos</em><strong>{jogo.lorenzos}</strong></span>
+                            <span><em>Adubo bruto</em><strong>+{balanco ? balanco.adubo : jogo.adubo}</strong></span>
+                            <span><em>XP de operacao</em><strong>+{balanco ? balanco.xp : 0}</strong></span>
+                        </div>
+
+                        {balanco && balanco.aduboCreditado < balanco.adubo && (
+                            <span className={styles.balancoAviso}>
+                                Tanque cheio: so entraram {balanco.aduboCreditado} de adubo.
+                            </span>
+                        )}
+
                         <div className={styles.gameOverBotoes}>
                             <button type="button" onClick={reiniciar}>Reiniciar</button>
                             <button type="button" onClick={trocarPersonagem}>Trocar piloto</button>
+                            <Link href="/fazenda">
+                                <a className={styles.botaoFazenda}>Ir para a Fazenda</a>
+                            </Link>
                         </div>
                     </div>
                 )}

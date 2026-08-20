@@ -9,6 +9,13 @@ export const PERSONAGENS = [
         descricao: "Equilibrado em tudo. Bom para aprender o jogo.",
         extra: "Sem fraquezas",
         foto: "/images/personagens/fred.png",
+        fazenda: {
+            papel: "Supervisor Geral",
+            icone: "🧑‍🌾",
+            efeito: "tempoCultivo",
+            valorBase: 0.1,
+            descricao: "Reduz o tempo de ciclo de todas as estufas em 10%.",
+        },
         atributos: {
             velocidade: 1,
             cadencia: 1,
@@ -44,6 +51,13 @@ export const PERSONAGENS = [
         descricao: "Rapidissima, mas o casco e de papel.",
         extra: "Velocidade +55%",
         foto: "/images/personagens/dudu.png",
+        fazenda: {
+            papel: "Transporte Logistico",
+            icone: "🚚",
+            efeito: "valorVenda",
+            valorBase: 0.15,
+            descricao: "Aumenta o valor de venda das colheitas em 15%.",
+        },
         atributos: {
             velocidade: 1.55,
             cadencia: 1.05,
@@ -79,6 +93,13 @@ export const PERSONAGENS = [
         descricao: "Casco pesado: aguenta pancada, mas anda devagar.",
         extra: "Vida 160",
         foto: "/images/personagens/gusta.png",
+        fazenda: {
+            papel: "Seguranca & Defesa",
+            icone: "🛡️",
+            efeito: "semErva",
+            valorBase: 1,
+            descricao: "Zera a chance de nascer Erva Daninha nos lotes.",
+        },
         atributos: {
             velocidade: 0.75,
             cadencia: 1.15,
@@ -114,6 +135,13 @@ export const PERSONAGENS = [
         descricao: "Metralhadora espacial: atira quase sem pausa.",
         extra: "Cadencia +40%",
         foto: "/images/personagens/iann.png",
+        fazenda: {
+            papel: "Engenheiro de Maquinas",
+            icone: "🔧",
+            efeito: "taxaRefino",
+            valorBase: 0.25,
+            descricao: "Aumenta a taxa de processamento do Refinador em 25%.",
+        },
         atributos: {
             velocidade: 1.05,
             cadencia: 0.6,
@@ -149,6 +177,13 @@ export const PERSONAGENS = [
         descricao: "Caca tesouro: pontua mais e derruba mais power-ups.",
         extra: "Pontos +40% e mais drops",
         foto: "/images/personagens/pupu.png",
+        fazenda: {
+            papel: "Extrator de Recursos",
+            icone: "⛏️",
+            efeito: "dropAdubo",
+            valorBase: 0.2,
+            descricao: "Rende +20% de Adubo Bruto nas fases jogadas com ele.",
+        },
         atributos: {
             velocidade: 1,
             cadencia: 1,
@@ -184,6 +219,13 @@ export const PERSONAGENS = [
         descricao: "Segura os power-ups quase o dobro do tempo.",
         extra: "Power-ups +80% de duracao",
         foto: "/images/personagens/ravel.png",
+        fazenda: {
+            papel: "Pesquisa & Quimica",
+            icone: "🧪",
+            efeito: "duracaoFertilizante",
+            valorBase: 0.5,
+            descricao: "Aumenta a duracao dos fertilizantes especiais em 50%.",
+        },
         atributos: {
             velocidade: 1.15,
             cadencia: 1,
