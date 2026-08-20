@@ -1,11 +1,14 @@
 import {useCallback, useContext, useEffect, useRef, useState} from "react";
+import Image from "next/image";
 import { v1 as uuidv1 } from "uuid";
 import Tiro1 from "../entities/Tiro1";
 import Player from "../entities/Player";
 import Arena from "../ornamental/Arena";
 import Inimigo from "../entities/Inimigo";
 import PowerUp from "../entities/PowerUp";
+import SelecaoPersonagem from "./SelecaoPersonagem";
 import {GameContext} from "../../contexts/gameContext";
+import {PERSONAGEM_PADRAO} from "../../data/personagens";
 import styles from "../../styles/components/Arena.module.css";
 import {useGameAudio} from "../../hooks/useGameAudio";
 
@@ -27,6 +30,7 @@ const VELOCIDADE_POWER_UP = 1.15;
 const DANO_INIMIGO = 20;
 const DANO_ESCAPOU = 10;
 const COOLDOWN_TIRO = 150;
+const COOLDOWN_SUPER = 80;
 const INTERVALO_SPAWN_BASE = 1100;
 const MAX_INIMIGOS = 8;
 const CHANCE_POWER_UP = 0.36;
@@ -42,6 +46,10 @@ function retangulosColidem(a, b){
         a.y < b.y + b.altura &&
         a.y + a.altura > b.y
     );
+}
+
+function atributosDe(personagem){
+    return (personagem || PERSONAGEM_PADRAO).atributos;
 }
 
 function criaInimigo(larguraArena, alturaArena, pontos = 0, visivel = false){
@@ -67,7 +75,9 @@ function criaPowerUp(x, y){
     };
 }
 
-function criaEstadoInicial(larguraArena, alturaArena){
+function criaEstadoInicial(larguraArena, alturaArena, personagem){
+    const vidaMaxima = atributosDe(personagem).vida || VIDA_INICIAL;
+
     return {
         player: {
             x: 40,
@@ -81,7 +91,8 @@ function criaEstadoInicial(larguraArena, alturaArena){
             escudo: 0,
             super: 0,
         },
-        vida: VIDA_INICIAL,
+        vida: vidaMaxima,
+        vidaMaxima,
         pontos: 0,
         spawnTimer: 0,
         gameOver: false,
@@ -90,8 +101,9 @@ function criaEstadoInicial(larguraArena, alturaArena){
 
 export default function MainGame() {
     const {intervaloDeAtualizacao, larguraArena, alturaArena, limitaX, limitaY} = useContext(GameContext);
+    const [personagem, setPersonagem] = useState(null);
     const [jogo, setJogo] = useState(function () {
-        return criaEstadoInicial(larguraArena, alturaArena);
+        return criaEstadoInicial(larguraArena, alturaArena, null);
     });
     const {audioAtivo, alternarAudio, registrarInteracao, tocarPowerUp, tocarTiro} = useGameAudio();
     const teclasPressionadasRef = useRef(new Set());
@@ -109,15 +121,32 @@ export default function MainGame() {
         teclasPressionadasRef.current.clear();
         pararTiroControle();
         ultimoTiroRef.current = 0;
-        setJogo(criaEstadoInicial(larguraArena, alturaArena));
-    }, [alturaArena, larguraArena, pararTiroControle]);
+        setJogo(criaEstadoInicial(larguraArena, alturaArena, personagem));
+    }, [alturaArena, larguraArena, pararTiroControle, personagem]);
+
+    const escolherPersonagem = useCallback(function (novoPersonagem) {
+        teclasPressionadasRef.current.clear();
+        pararTiroControle();
+        ultimoTiroRef.current = 0;
+        registrarInteracao();
+        setPersonagem(novoPersonagem);
+        setJogo(criaEstadoInicial(larguraArena, alturaArena, novoPersonagem));
+    }, [alturaArena, larguraArena, pararTiroControle, registrarInteracao]);
+
+    const trocarPersonagem = useCallback(function () {
+        teclasPressionadasRef.current.clear();
+        pararTiroControle();
+        ultimoTiroRef.current = 0;
+        setPersonagem(null);
+    }, [pararTiroControle]);
 
     const atira = useCallback(function () {
         const agora = Date.now();
         const efeitosAtivos = jogo.efeitos || {tiroDuplo: 0, escudo: 0, super: 0};
-        const cooldownAtual = efeitosAtivos.super > 0 ? 80 : COOLDOWN_TIRO;
+        const cadencia = atributosDe(personagem).cadencia;
+        const cooldownAtual = (efeitosAtivos.super > 0 ? COOLDOWN_SUPER : COOLDOWN_TIRO) * cadencia;
 
-        if(jogo.gameOver){
+        if(!personagem || jogo.gameOver){
             return;
         }
 
@@ -149,9 +178,13 @@ export default function MainGame() {
                 tiros: [...estadoAtual.tiros, ...novosTiros],
             };
         });
-    }, [jogo.efeitos, jogo.gameOver, tocarTiro]);
+    }, [jogo.efeitos, jogo.gameOver, personagem, tocarTiro]);
 
     useEffect(function () {
+        if(!personagem){
+            return;
+        }
+
         function keyDown(e){
             const tecla = e.key.toLowerCase();
 
@@ -171,6 +204,10 @@ export default function MainGame() {
             if(tecla === "r" && jogo.gameOver){
                 reiniciar();
             }
+
+            if(tecla === "t"){
+                trocarPersonagem();
+            }
         }
 
         function keyUp(e){
@@ -188,7 +225,7 @@ export default function MainGame() {
             document.removeEventListener("keydown", keyDown);
             document.removeEventListener("keyup", keyUp);
         };
-    }, [atira, jogo.gameOver, registrarInteracao, reiniciar]);
+    }, [atira, jogo.gameOver, personagem, registrarInteracao, reiniciar, trocarPersonagem]);
 
     const pressionarControle = useCallback(function (tecla, e) {
         e.preventDefault();
@@ -198,14 +235,16 @@ export default function MainGame() {
             atira();
 
             if(!tiroControleRef.current && typeof window !== "undefined"){
-                tiroControleRef.current = window.setInterval(atira, COOLDOWN_TIRO + 30);
+                const cadencia = atributosDe(personagem).cadencia;
+
+                tiroControleRef.current = window.setInterval(atira, (COOLDOWN_TIRO * cadencia) + 30);
             }
 
             return;
         }
 
         teclasPressionadasRef.current.add(tecla);
-    }, [atira, registrarInteracao]);
+    }, [atira, personagem, registrarInteracao]);
 
     const soltarControle = useCallback(function (tecla, e) {
         e.preventDefault();
@@ -225,9 +264,11 @@ export default function MainGame() {
     }, [pararTiroControle]);
 
     useEffect(function () {
-        if(jogo.gameOver){
+        if(!personagem || jogo.gameOver){
             return;
         }
+
+        const atributos = atributosDe(personagem);
 
         const intervalo = setInterval(function () {
             setJogo(function (estadoAtual) {
@@ -246,7 +287,8 @@ export default function MainGame() {
                     escudo: Math.max(0, efeitosAtuais.escudo - intervaloDeAtualizacao),
                     super: Math.max(0, efeitosAtuais.super - intervaloDeAtualizacao),
                 };
-                const velocidadePlayer = efeitos.super > 0 ? VELOCIDADE_PLAYER * 1.9 : VELOCIDADE_PLAYER;
+                const velocidadeBase = VELOCIDADE_PLAYER * atributos.velocidade;
+                const velocidadePlayer = efeitos.super > 0 ? velocidadeBase * 1.9 : velocidadeBase;
 
                 const player = {
                     x: limitaX(estadoAtual.player.x + (direcaoX * velocidadePlayer * normalizadorDiagonal), LARGURA_PLAYER),
@@ -285,6 +327,7 @@ export default function MainGame() {
                 const tirosRemovidos = new Set();
                 const inimigosRemovidos = new Set();
                 const novosPowerUps = [];
+                const chancePowerUp = Math.min(0.9, CHANCE_POWER_UP * atributos.sortePowerUp);
                 let pontosGanhos = 0;
 
                 tiros.forEach(function (tiro) {
@@ -308,9 +351,9 @@ export default function MainGame() {
                             }
 
                             inimigosRemovidos.add(inimigo.id);
-                            pontosGanhos += tiro.super ? 15 : 10;
+                            pontosGanhos += Math.round((tiro.super ? 15 : 10) * atributos.pontos);
 
-                            if(Math.random() < CHANCE_POWER_UP){
+                            if(Math.random() < chancePowerUp){
                                 novosPowerUps.push(criaPowerUp(inimigo.x, inimigo.y));
                             }
                         }
@@ -354,6 +397,7 @@ export default function MainGame() {
 
                 powerUps = [...powerUps, ...novosPowerUps];
 
+                const vidaMaxima = estadoAtual.vidaMaxima || VIDA_INICIAL;
                 let pontos = estadoAtual.pontos + pontosGanhos;
                 let vida = Math.max(0, estadoAtual.vida - danoRecebido);
                 let coletouPowerUp = false;
@@ -369,30 +413,30 @@ export default function MainGame() {
                     }
 
                     coletouPowerUp = true;
-                    pontos += 5;
+                    pontos += Math.round(5 * atributos.pontos);
 
                     if(powerUp.tipo === "vida"){
-                        vida = Math.min(VIDA_INICIAL, vida + 25);
+                        vida = Math.min(vidaMaxima, vida + 25);
                     }
 
                     if(powerUp.tipo === "tiroDuplo"){
                         efeitos = {
                             ...efeitos,
-                            tiroDuplo: DURACAO_TIRO_DUPLO,
+                            tiroDuplo: DURACAO_TIRO_DUPLO * atributos.duracaoPowerUp,
                         };
                     }
 
                     if(powerUp.tipo === "escudo"){
                         efeitos = {
                             ...efeitos,
-                            escudo: DURACAO_ESCUDO,
+                            escudo: DURACAO_ESCUDO * atributos.duracaoPowerUp,
                         };
                     }
 
                     if(powerUp.tipo === "super"){
                         efeitos = {
                             ...efeitos,
-                            super: DURACAO_SUPER,
+                            super: DURACAO_SUPER * atributos.duracaoPowerUp,
                         };
                     }
 
@@ -420,6 +464,7 @@ export default function MainGame() {
                     powerUps,
                     efeitos,
                     vida,
+                    vidaMaxima,
                     pontos,
                     spawnTimer,
                     gameOver: vida <= 0,
@@ -430,19 +475,38 @@ export default function MainGame() {
         return function () {
             clearInterval(intervalo);
         };
-    }, [alturaArena, intervaloDeAtualizacao, jogo.gameOver, larguraArena, limitaX, limitaY, tocarPowerUp]);
+    }, [alturaArena, intervaloDeAtualizacao, jogo.gameOver, larguraArena, limitaX, limitaY, personagem, tocarPowerUp]);
+
+    if(!personagem){
+        return (
+            <SelecaoPersonagem onEscolher={escolherPersonagem} />
+        )
+    }
 
     const efeitosAtivos = jogo.efeitos || {tiroDuplo: 0, escudo: 0, super: 0};
     const powerUps = jogo.powerUps || [];
+    const vidaMaxima = jogo.vidaMaxima || VIDA_INICIAL;
 
     return (
         <div className={styles.gameLayout}>
             <Arena>
                 <div className={styles.hud}>
                     <div className={styles.vidaGrupo}>
+                        <span className={styles.hudPiloto}>
+                            <span className={styles.hudPilotoFoto} style={personagem.estiloNave}>
+                                <Image
+                                    src={personagem.foto}
+                                    alt={personagem.nome}
+                                    layout="fill"
+                                    objectFit="cover"
+                                    objectPosition="center center"
+                                />
+                            </span>
+                            {personagem.nome}
+                        </span>
                         <span className={styles.hudLabel}>Vida</span>
                         <div className={styles.vidaBarra}>
-                            <span style={{width: jogo.vida + "%"}} />
+                            <span style={{width: ((jogo.vida / vidaMaxima) * 100) + "%"}} />
                         </div>
                         <span className={styles.vidaTexto}>{jogo.vida}</span>
                     </div>
@@ -468,6 +532,7 @@ export default function MainGame() {
                     y={jogo.player.y}
                     largura={LARGURA_PLAYER}
                     altura={ALTURA_PLAYER}
+                    personagem={personagem}
                     escudoAtivo={efeitosAtivos.escudo > 0}
                     superAtivo={efeitosAtivos.super > 0}
                 />
@@ -507,8 +572,11 @@ export default function MainGame() {
                 {jogo.gameOver && (
                     <div className={styles.gameOver}>
                         <strong>Fim de jogo</strong>
-                        <span>Pontos: {jogo.pontos}</span>
-                        <button type="button" onClick={reiniciar}>Reiniciar</button>
+                        <span>{personagem.nome} fez {jogo.pontos} pontos</span>
+                        <div className={styles.gameOverBotoes}>
+                            <button type="button" onClick={reiniciar}>Reiniciar</button>
+                            <button type="button" onClick={trocarPersonagem}>Trocar piloto</button>
+                        </div>
                     </div>
                 )}
             </Arena>
@@ -517,6 +585,7 @@ export default function MainGame() {
                 <span><kbd>WASD</kbd> mover</span>
                 <span><kbd>Espaco</kbd> tiro</span>
                 <span><kbd>R</kbd> reiniciar</span>
+                <span><kbd>T</kbd> trocar piloto</span>
             </div>
 
             <div className={styles.mobileControls} aria-label="Controles mobile">

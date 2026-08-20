@@ -18,6 +18,23 @@ You can start editing the page by modifying `pages/index.js`. The page auto-upda
 
 The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
 
+## Pilotos (selecao de personagem)
+
+Cada partida comeca na tela "Escolha seu piloto". Os pilotos ficam em
+`src/data/personagens.js` e cada um define:
+
+- `foto`: arquivo em `public/images/personagens/<id>.png`
+- `estiloNave`: variaveis CSS que desenham a nave (cores, bico, asas, raio)
+- `atributos`: `velocidade`, `cadencia` (quanto menor, mais rapido atira), `vida`,
+  `pontos`, `sortePowerUp` e `duracaoPowerUp`
+- `barras`: valores de 0 a 100 so para as barrinhas do card
+
+Pilotos atuais: Fred, Dudu, Gusta, Iann, Pupu e Ravel. Para trocar a foto de
+alguem basta substituir o png correspondente em `public/images/personagens/`
+mantendo o mesmo nome de arquivo (o `id` do piloto).
+
+Atalhos: `WASD` move, `Espaco` atira, `R` reinicia, `T` volta para a selecao de piloto.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
