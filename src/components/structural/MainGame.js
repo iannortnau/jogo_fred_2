@@ -15,6 +15,9 @@ import {ADUBO_POR_LORENZO, ADUBO_POR_SACO, CHANCE_SACO_ADUBO} from "../../data/f
 import {useFazenda} from "../../contexts/fazendaContext";
 import styles from "../../styles/components/Arena.module.css";
 import {useGameAudio} from "../../hooks/useGameAudio";
+import {useLoopDeJogo} from "../../hooks/useLoopDeJogo";
+import {useEntradaJogo} from "../../hooks/useEntradaJogo";
+import {retangulosColidem} from "../../engine/motor";
 
 const LARGURA_PLAYER = 86;
 const ALTURA_PLAYER = 58;
@@ -42,15 +45,6 @@ const DURACAO_TIRO_DUPLO = 9000;
 const DURACAO_ESCUDO = 7000;
 const DURACAO_SUPER = 10000;
 const TIPOS_POWER_UP = ["vida", "tiroDuplo", "escudo", "super"];
-
-function retangulosColidem(a, b){
-    return (
-        a.x < b.x + b.largura &&
-        a.x + a.largura > b.x &&
-        a.y < b.y + b.altura &&
-        a.y + a.altura > b.y
-    );
-}
 
 function atributosDe(personagem){
     return (personagem || PERSONAGEM_PADRAO).atributos;
@@ -115,51 +109,60 @@ export default function MainGame() {
     const {registrarRun} = useFazenda();
     const [balanco, setBalanco] = useState(null);
     const runCreditadaRef = useRef(false);
-    const teclasPressionadasRef = useRef(new Set());
     const ultimoTiroRef = useRef(0);
-    const tiroControleRef = useRef(null);
+    const acoesRef = useRef({});
+    const cadenciaAtual = atributosDe(personagem).cadencia;
 
-    const pararTiroControle = useCallback(function () {
-        if(tiroControleRef.current && typeof window !== "undefined"){
-            window.clearInterval(tiroControleRef.current);
-            tiroControleRef.current = null;
-        }
-    }, []);
+    const {teclasRef, direcao, pressionarControle, soltarControle, limpaTeclas} = useEntradaJogo({
+        ativo: Boolean(personagem),
+        repetirAcao: (COOLDOWN_TIRO * cadenciaAtual) + 30,
+        aoInteragir: registrarInteracao,
+        aoAcao: function () {
+            if(acoesRef.current.atira){
+                acoesRef.current.atira();
+            }
+        },
+        aoTecla: function (tecla) {
+            if(tecla === "r" && acoesRef.current.reiniciar){
+                acoesRef.current.reiniciar();
+            }
+
+            if(tecla === "t" && acoesRef.current.trocarPersonagem){
+                acoesRef.current.trocarPersonagem();
+            }
+        },
+    });
 
     const reiniciar = useCallback(function () {
-        teclasPressionadasRef.current.clear();
-        pararTiroControle();
+        limpaTeclas();
         ultimoTiroRef.current = 0;
         runCreditadaRef.current = false;
         setBalanco(null);
         setJogo(criaEstadoInicial(larguraArena, alturaArena, personagem));
-    }, [alturaArena, larguraArena, pararTiroControle, personagem]);
+    }, [alturaArena, larguraArena, limpaTeclas, personagem]);
 
     const escolherPersonagem = useCallback(function (novoPersonagem) {
-        teclasPressionadasRef.current.clear();
-        pararTiroControle();
+        limpaTeclas();
         ultimoTiroRef.current = 0;
         registrarInteracao();
         runCreditadaRef.current = false;
         setBalanco(null);
         setPersonagem(novoPersonagem);
         setJogo(criaEstadoInicial(larguraArena, alturaArena, novoPersonagem));
-    }, [alturaArena, larguraArena, pararTiroControle, registrarInteracao]);
+    }, [alturaArena, larguraArena, limpaTeclas, registrarInteracao]);
 
     const trocarPersonagem = useCallback(function () {
-        teclasPressionadasRef.current.clear();
-        pararTiroControle();
+        limpaTeclas();
         ultimoTiroRef.current = 0;
         runCreditadaRef.current = false;
         setBalanco(null);
         setPersonagem(null);
-    }, [pararTiroControle]);
+    }, [limpaTeclas]);
 
     const atira = useCallback(function () {
         const agora = Date.now();
         const efeitosAtivos = jogo.efeitos || {tiroDuplo: 0, escudo: 0, super: 0};
-        const cadencia = atributosDe(personagem).cadencia;
-        const cooldownAtual = (efeitosAtivos.super > 0 ? COOLDOWN_SUPER : COOLDOWN_TIRO) * cadencia;
+        const cooldownAtual = (efeitosAtivos.super > 0 ? COOLDOWN_SUPER : COOLDOWN_TIRO) * cadenciaAtual;
 
         if(!personagem || jogo.gameOver){
             return;
@@ -193,318 +196,226 @@ export default function MainGame() {
                 tiros: [...estadoAtual.tiros, ...novosTiros],
             };
         });
-    }, [jogo.efeitos, jogo.gameOver, personagem, tocarTiro]);
+    }, [cadenciaAtual, jogo.efeitos, jogo.gameOver, personagem, tocarTiro]);
 
-    useEffect(function () {
-        if(!personagem){
-            return;
-        }
+    acoesRef.current = {atira, reiniciar, trocarPersonagem};
 
-        function keyDown(e){
-            const tecla = e.key.toLowerCase();
-
-            if(["w", "a", "s", "d", " "].includes(tecla)){
-                e.preventDefault();
-                registrarInteracao();
-            }
-
-            if(["w", "a", "s", "d"].includes(tecla)){
-                teclasPressionadasRef.current.add(tecla);
-            }
-
-            if(e.key === " "){
-                atira();
-            }
-
-            if(tecla === "r" && jogo.gameOver){
-                reiniciar();
-            }
-
-            if(tecla === "t"){
-                trocarPersonagem();
-            }
-        }
-
-        function keyUp(e){
-            const tecla = e.key.toLowerCase();
-
-            if(["w", "a", "s", "d"].includes(tecla)){
-                teclasPressionadasRef.current.delete(tecla);
-            }
-        }
-
-        document.addEventListener("keydown", keyDown);
-        document.addEventListener("keyup", keyUp);
-
-        return function () {
-            document.removeEventListener("keydown", keyDown);
-            document.removeEventListener("keyup", keyUp);
-        };
-    }, [atira, jogo.gameOver, personagem, registrarInteracao, reiniciar, trocarPersonagem]);
-
-    const pressionarControle = useCallback(function (tecla, e) {
-        e.preventDefault();
-        registrarInteracao();
-
-        if(tecla === " "){
-            atira();
-
-            if(!tiroControleRef.current && typeof window !== "undefined"){
-                const cadencia = atributosDe(personagem).cadencia;
-
-                tiroControleRef.current = window.setInterval(atira, (COOLDOWN_TIRO * cadencia) + 30);
-            }
-
-            return;
-        }
-
-        teclasPressionadasRef.current.add(tecla);
-    }, [atira, personagem, registrarInteracao]);
-
-    const soltarControle = useCallback(function (tecla, e) {
-        e.preventDefault();
-
-        if(tecla === " "){
-            pararTiroControle();
-            return;
-        }
-
-        teclasPressionadasRef.current.delete(tecla);
-    }, [pararTiroControle]);
-
-    useEffect(function () {
-        return function () {
-            pararTiroControle();
-        };
-    }, [pararTiroControle]);
-
-    useEffect(function () {
-        if(!personagem || jogo.gameOver){
-            return;
-        }
-
+    const avancaPartida = useCallback(function (passo) {
         const atributos = atributosDe(personagem);
 
-        const intervalo = setInterval(function () {
-            setJogo(function (estadoAtual) {
-                if(estadoAtual.gameOver){
-                    return estadoAtual;
-                }
+        setJogo(function (estadoAtual) {
+            if(estadoAtual.gameOver){
+                return estadoAtual;
+            }
 
-                const teclas = teclasPressionadasRef.current;
-                const direcaoX = (teclas.has("d") ? 1 : 0) - (teclas.has("a") ? 1 : 0);
-                const direcaoY = (teclas.has("s") ? 1 : 0) - (teclas.has("w") ? 1 : 0);
-                const normalizadorDiagonal = direcaoX !== 0 && direcaoY !== 0 ? Math.SQRT1_2 : 1;
+            const movimento = direcao();
 
-                const efeitosAtuais = estadoAtual.efeitos || {tiroDuplo: 0, escudo: 0, super: 0};
-                let efeitos = {
-                    tiroDuplo: Math.max(0, efeitosAtuais.tiroDuplo - intervaloDeAtualizacao),
-                    escudo: Math.max(0, efeitosAtuais.escudo - intervaloDeAtualizacao),
-                    super: Math.max(0, efeitosAtuais.super - intervaloDeAtualizacao),
-                };
-                const velocidadeBase = VELOCIDADE_PLAYER * atributos.velocidade;
-                const velocidadePlayer = efeitos.super > 0 ? velocidadeBase * 1.9 : velocidadeBase;
+            const efeitosAtuais = estadoAtual.efeitos || {tiroDuplo: 0, escudo: 0, super: 0};
+            let efeitos = {
+                tiroDuplo: Math.max(0, efeitosAtuais.tiroDuplo - passo),
+                escudo: Math.max(0, efeitosAtuais.escudo - passo),
+                super: Math.max(0, efeitosAtuais.super - passo),
+            };
+            const velocidadeBase = VELOCIDADE_PLAYER * atributos.velocidade;
+            const velocidadePlayer = efeitos.super > 0 ? velocidadeBase * 1.9 : velocidadeBase;
 
-                const player = {
-                    x: limitaX(estadoAtual.player.x + (direcaoX * velocidadePlayer * normalizadorDiagonal), LARGURA_PLAYER),
-                    y: limitaY(estadoAtual.player.y + (direcaoY * velocidadePlayer * normalizadorDiagonal), ALTURA_PLAYER),
-                };
+            const player = {
+                x: limitaX(estadoAtual.player.x + (movimento.x * velocidadePlayer), LARGURA_PLAYER),
+                y: limitaY(estadoAtual.player.y + (movimento.y * velocidadePlayer), ALTURA_PLAYER),
+            };
 
-                let tiros = estadoAtual.tiros
-                    .map(function (tiro) {
-                        return {
-                            ...tiro,
-                            x: tiro.x + (tiro.super ? VELOCIDADE_SUPER_TIRO : VELOCIDADE_TIRO),
-                        };
-                    })
-                    .filter(function (tiro) {
-                        return tiro.x <= larguraArena;
-                    });
-
-                let inimigos = estadoAtual.inimigos.map(function (inimigo) {
+            let tiros = estadoAtual.tiros
+                .map(function (tiro) {
                     return {
-                        ...inimigo,
-                        x: inimigo.x - inimigo.velocidade,
-                        };
-                    });
-
-                let powerUps = (estadoAtual.powerUps || [])
-                    .map(function (powerUp) {
-                        return {
-                            ...powerUp,
-                            x: powerUp.x - powerUp.velocidade,
-                        };
-                    })
-                    .filter(function (powerUp) {
-                        return powerUp.x > -LARGURA_POWER_UP;
-                    });
-
-                const tirosRemovidos = new Set();
-                const inimigosRemovidos = new Set();
-                const novosPowerUps = [];
-                const chancePowerUp = Math.min(0.9, CHANCE_POWER_UP * atributos.sortePowerUp);
-                let pontosGanhos = 0;
-                let lorenzosAbatidos = 0;
-                let aduboGanho = 0;
-
-                tiros.forEach(function (tiro) {
-                    inimigos.forEach(function (inimigo) {
-                        if(tirosRemovidos.has(tiro.id) || inimigosRemovidos.has(inimigo.id)){
-                            return;
-                        }
-
-                        const colidiu = retangulosColidem(
-                            {
-                                ...tiro,
-                                largura: tiro.super ? LARGURA_SUPER_TIRO : LARGURA_TIRO,
-                                altura: tiro.super ? ALTURA_SUPER_TIRO : ALTURA_TIRO,
-                            },
-                            {...inimigo, largura: LARGURA_INIMIGO, altura: ALTURA_INIMIGO}
-                        );
-
-                        if(colidiu){
-                            if(!tiro.super){
-                                tirosRemovidos.add(tiro.id);
-                            }
-
-                            inimigosRemovidos.add(inimigo.id);
-                            pontosGanhos += Math.round((tiro.super ? 15 : 10) * atributos.pontos);
-                            lorenzosAbatidos++;
-                            aduboGanho += ADUBO_POR_LORENZO;
-
-                            if(Math.random() < chancePowerUp){
-                                novosPowerUps.push(criaPowerUp(inimigo.x, inimigo.y));
-                            }
-
-                            if(Math.random() < CHANCE_SACO_ADUBO){
-                                novosPowerUps.push(criaPowerUp(inimigo.x, inimigo.y, "adubo"));
-                            }
-                        }
-                    });
+                        ...tiro,
+                        x: tiro.x + (tiro.super ? VELOCIDADE_SUPER_TIRO : VELOCIDADE_TIRO),
+                    };
+                })
+                .filter(function (tiro) {
+                    return tiro.x <= larguraArena;
                 });
 
-                tiros = tiros.filter(function (tiro) {
-                    return !tirosRemovidos.has(tiro.id);
+            let inimigos = estadoAtual.inimigos.map(function (inimigo) {
+                return {
+                    ...inimigo,
+                    x: inimigo.x - inimigo.velocidade,
+                    };
                 });
 
-                inimigos = inimigos.filter(function (inimigo) {
-                    return !inimigosRemovidos.has(inimigo.id);
+            let powerUps = (estadoAtual.powerUps || [])
+                .map(function (powerUp) {
+                    return {
+                        ...powerUp,
+                        x: powerUp.x - powerUp.velocidade,
+                    };
+                })
+                .filter(function (powerUp) {
+                    return powerUp.x > -LARGURA_POWER_UP;
                 });
 
-                const playerBox = {...player, largura: LARGURA_PLAYER, altura: ALTURA_PLAYER};
-                const inimigosQueDerrubaramVida = new Set();
-                let danoRecebido = 0;
+            const tirosRemovidos = new Set();
+            const inimigosRemovidos = new Set();
+            const novosPowerUps = [];
+            const chancePowerUp = Math.min(0.9, CHANCE_POWER_UP * atributos.sortePowerUp);
+            let pontosGanhos = 0;
+            let lorenzosAbatidos = 0;
+            let aduboGanho = 0;
 
+            tiros.forEach(function (tiro) {
                 inimigos.forEach(function (inimigo) {
-                    const inimigoBox = {...inimigo, largura: LARGURA_INIMIGO, altura: ALTURA_INIMIGO};
-
-                    if(retangulosColidem(playerBox, inimigoBox)){
-                        inimigosQueDerrubaramVida.add(inimigo.id);
-
-                        if(efeitos.escudo <= 0 && efeitos.super <= 0){
-                            danoRecebido += DANO_INIMIGO;
-                        }
-
+                    if(tirosRemovidos.has(tiro.id) || inimigosRemovidos.has(inimigo.id)){
                         return;
                     }
 
-                    if(inimigo.x <= 0){
-                        inimigosQueDerrubaramVida.add(inimigo.id);
-                        danoRecebido += DANO_ESCAPOU;
-                    }
-                });
-
-                inimigos = inimigos.filter(function (inimigo) {
-                    return !inimigosQueDerrubaramVida.has(inimigo.id);
-                });
-
-                powerUps = [...powerUps, ...novosPowerUps];
-
-                const vidaMaxima = estadoAtual.vidaMaxima || VIDA_INICIAL;
-                let pontos = estadoAtual.pontos + pontosGanhos;
-                let vida = Math.max(0, estadoAtual.vida - danoRecebido);
-                let coletouPowerUp = false;
-
-                powerUps = powerUps.filter(function (powerUp) {
-                    const coletou = retangulosColidem(
-                        playerBox,
-                        {...powerUp, largura: LARGURA_POWER_UP, altura: ALTURA_POWER_UP}
+                    const colidiu = retangulosColidem(
+                        {
+                            ...tiro,
+                            largura: tiro.super ? LARGURA_SUPER_TIRO : LARGURA_TIRO,
+                            altura: tiro.super ? ALTURA_SUPER_TIRO : ALTURA_TIRO,
+                        },
+                        {...inimigo, largura: LARGURA_INIMIGO, altura: ALTURA_INIMIGO}
                     );
 
-                    if(!coletou){
-                        return true;
+                    if(colidiu){
+                        if(!tiro.super){
+                            tirosRemovidos.add(tiro.id);
+                        }
+
+                        inimigosRemovidos.add(inimigo.id);
+                        pontosGanhos += Math.round((tiro.super ? 15 : 10) * atributos.pontos);
+                        lorenzosAbatidos++;
+                        aduboGanho += ADUBO_POR_LORENZO;
+
+                        if(Math.random() < chancePowerUp){
+                            novosPowerUps.push(criaPowerUp(inimigo.x, inimigo.y));
+                        }
+
+                        if(Math.random() < CHANCE_SACO_ADUBO){
+                            novosPowerUps.push(criaPowerUp(inimigo.x, inimigo.y, "adubo"));
+                        }
                     }
-
-                    coletouPowerUp = true;
-                    pontos += Math.round(5 * atributos.pontos);
-
-                    if(powerUp.tipo === "adubo"){
-                        aduboGanho += ADUBO_POR_SACO;
-                    }
-
-                    if(powerUp.tipo === "vida"){
-                        vida = Math.min(vidaMaxima, vida + 25);
-                    }
-
-                    if(powerUp.tipo === "tiroDuplo"){
-                        efeitos = {
-                            ...efeitos,
-                            tiroDuplo: DURACAO_TIRO_DUPLO * atributos.duracaoPowerUp,
-                        };
-                    }
-
-                    if(powerUp.tipo === "escudo"){
-                        efeitos = {
-                            ...efeitos,
-                            escudo: DURACAO_ESCUDO * atributos.duracaoPowerUp,
-                        };
-                    }
-
-                    if(powerUp.tipo === "super"){
-                        efeitos = {
-                            ...efeitos,
-                            super: DURACAO_SUPER * atributos.duracaoPowerUp,
-                        };
-                    }
-
-                    return false;
                 });
-
-                if(coletouPowerUp){
-                    tocarPowerUp();
-                }
-
-                let spawnTimer = estadoAtual.spawnTimer + intervaloDeAtualizacao;
-                const intervaloSpawn = Math.max(450, INTERVALO_SPAWN_BASE - (pontos * 3));
-                const limiteInimigos = Math.min(MAX_INIMIGOS, 3 + Math.floor(pontos / 50));
-
-                if(spawnTimer >= intervaloSpawn && inimigos.length < limiteInimigos){
-                    inimigos = [...inimigos, criaInimigo(larguraArena, alturaArena, pontos)];
-                    spawnTimer = 0;
-                }
-
-                return {
-                    ...estadoAtual,
-                    player,
-                    tiros,
-                    inimigos,
-                    powerUps,
-                    efeitos,
-                    vida,
-                    vidaMaxima,
-                    pontos,
-                    lorenzos: estadoAtual.lorenzos + lorenzosAbatidos,
-                    adubo: estadoAtual.adubo + aduboGanho,
-                    spawnTimer,
-                    gameOver: vida <= 0,
-                };
             });
-        }, intervaloDeAtualizacao);
 
-        return function () {
-            clearInterval(intervalo);
-        };
-    }, [alturaArena, intervaloDeAtualizacao, jogo.gameOver, larguraArena, limitaX, limitaY, personagem, tocarPowerUp]);
+            tiros = tiros.filter(function (tiro) {
+                return !tirosRemovidos.has(tiro.id);
+            });
+
+            inimigos = inimigos.filter(function (inimigo) {
+                return !inimigosRemovidos.has(inimigo.id);
+            });
+
+            const playerBox = {...player, largura: LARGURA_PLAYER, altura: ALTURA_PLAYER};
+            const inimigosQueDerrubaramVida = new Set();
+            let danoRecebido = 0;
+
+            inimigos.forEach(function (inimigo) {
+                const inimigoBox = {...inimigo, largura: LARGURA_INIMIGO, altura: ALTURA_INIMIGO};
+
+                if(retangulosColidem(playerBox, inimigoBox)){
+                    inimigosQueDerrubaramVida.add(inimigo.id);
+
+                    if(efeitos.escudo <= 0 && efeitos.super <= 0){
+                        danoRecebido += DANO_INIMIGO;
+                    }
+
+                    return;
+                }
+
+                if(inimigo.x <= 0){
+                    inimigosQueDerrubaramVida.add(inimigo.id);
+                    danoRecebido += DANO_ESCAPOU;
+                }
+            });
+
+            inimigos = inimigos.filter(function (inimigo) {
+                return !inimigosQueDerrubaramVida.has(inimigo.id);
+            });
+
+            powerUps = [...powerUps, ...novosPowerUps];
+
+            const vidaMaxima = estadoAtual.vidaMaxima || VIDA_INICIAL;
+            let pontos = estadoAtual.pontos + pontosGanhos;
+            let vida = Math.max(0, estadoAtual.vida - danoRecebido);
+            let coletouPowerUp = false;
+
+            powerUps = powerUps.filter(function (powerUp) {
+                const coletou = retangulosColidem(
+                    playerBox,
+                    {...powerUp, largura: LARGURA_POWER_UP, altura: ALTURA_POWER_UP}
+                );
+
+                if(!coletou){
+                    return true;
+                }
+
+                coletouPowerUp = true;
+                pontos += Math.round(5 * atributos.pontos);
+
+                if(powerUp.tipo === "adubo"){
+                    aduboGanho += ADUBO_POR_SACO;
+                }
+
+                if(powerUp.tipo === "vida"){
+                    vida = Math.min(vidaMaxima, vida + 25);
+                }
+
+                if(powerUp.tipo === "tiroDuplo"){
+                    efeitos = {
+                        ...efeitos,
+                        tiroDuplo: DURACAO_TIRO_DUPLO * atributos.duracaoPowerUp,
+                    };
+                }
+
+                if(powerUp.tipo === "escudo"){
+                    efeitos = {
+                        ...efeitos,
+                        escudo: DURACAO_ESCUDO * atributos.duracaoPowerUp,
+                    };
+                }
+
+                if(powerUp.tipo === "super"){
+                    efeitos = {
+                        ...efeitos,
+                        super: DURACAO_SUPER * atributos.duracaoPowerUp,
+                    };
+                }
+
+                return false;
+            });
+
+            if(coletouPowerUp){
+                tocarPowerUp();
+            }
+
+            let spawnTimer = estadoAtual.spawnTimer + passo;
+            const intervaloSpawn = Math.max(450, INTERVALO_SPAWN_BASE - (pontos * 3));
+            const limiteInimigos = Math.min(MAX_INIMIGOS, 3 + Math.floor(pontos / 50));
+
+            if(spawnTimer >= intervaloSpawn && inimigos.length < limiteInimigos){
+                inimigos = [...inimigos, criaInimigo(larguraArena, alturaArena, pontos)];
+                spawnTimer = 0;
+            }
+
+            return {
+                ...estadoAtual,
+                player,
+                tiros,
+                inimigos,
+                powerUps,
+                efeitos,
+                vida,
+                vidaMaxima,
+                pontos,
+                lorenzos: estadoAtual.lorenzos + lorenzosAbatidos,
+                adubo: estadoAtual.adubo + aduboGanho,
+                spawnTimer,
+                gameOver: vida <= 0,
+            };
+        });
+    }, [alturaArena, direcao, larguraArena, limitaX, limitaY, personagem, tocarPowerUp]);
+
+    useLoopDeJogo(Boolean(personagem) && !jogo.gameOver, intervaloDeAtualizacao, avancaPartida);
 
     useEffect(function () {
         if(!personagem || !jogo.gameOver || runCreditadaRef.current){
