@@ -44,7 +44,7 @@ export const MUDAS = [
     {
         id: "broto",
         nome: "Broto de Resina",
-        icone: "🌱",
+        icone: "🪴",
         tipo: "comum",
         comportamento: "gerador",
         descricao: "Solta 25 de resina a cada 8s.",
@@ -57,7 +57,7 @@ export const MUDAS = [
     {
         id: "canhao",
         nome: "Cuia-Canhao",
-        icone: "💣",
+        icone: "🚬",
         tipo: "comum",
         comportamento: "atirador",
         descricao: "Atira reto na linha: 20 de dano a cada 1,4s.",
@@ -72,7 +72,7 @@ export const MUDAS = [
     {
         id: "muro",
         nome: "Bong de Pedra",
-        icone: "🪵",
+        icone: "🧉",
         tipo: "comum",
         comportamento: "parede",
         descricao: "900 de vida. Segura a fila e nao atira.",
@@ -87,7 +87,7 @@ export const SUPER_PLANTAS = [
     {
         id: "skunk",
         nome: "Skunk Explosiva",
-        icone: "🌵",
+        icone: "💥",
         tipo: "super",
         comportamento: "bomba",
         descricao: "Explode na hora: 900 de dano em 3x3.",
@@ -101,7 +101,7 @@ export const SUPER_PLANTAS = [
     {
         id: "haze",
         nome: "Purple Haze",
-        icone: "🟣",
+        icone: "🫐",
         tipo: "super",
         comportamento: "atirador",
         descricao: "Atira e deixa o Lorenzo lento por 3s.",
@@ -136,7 +136,7 @@ export const SUPER_PLANTAS = [
     {
         id: "trichoma",
         nome: "Trichoma Triplo",
-        icone: "🍁",
+        icone: "✨",
         tipo: "super",
         comportamento: "triplo",
         descricao: "Atira na linha e nas duas vizinhas.",
@@ -168,7 +168,7 @@ export const SUPER_PLANTAS = [
     {
         id: "alvara",
         nome: "Alvara Carimbado",
-        icone: "🕊️",
+        icone: "📜",
         tipo: "super",
         comportamento: "alvara",
         descricao: "Anula PLs e apreensoes por 15s.",

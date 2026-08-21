@@ -13,7 +13,7 @@ const ABAS = [
     {id: "estufa", nome: "Plantacao", icone: "🌿"},
     {id: "refino", nome: "Refino", icone: "⚗️"},
     {id: "tripulacao", nome: "Tripulacao", icone: "👨‍🚀"},
-    {id: "arsenal", nome: "Arsenal", icone: "🌵"},
+    {id: "arsenal", nome: "Arsenal", icone: "🍁"},
     {id: "loja", nome: "Upgrades", icone: "🛒"},
 ];
 
