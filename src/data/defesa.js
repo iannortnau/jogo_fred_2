@@ -57,7 +57,7 @@ export const MUDAS = [
     {
         id: "canhao",
         nome: "Cuia-Canhao",
-        icone: "🪈",
+        icone: "🔫",
         tipo: "comum",
         comportamento: "atirador",
         descricao: "Atira reto na linha: 20 de dano a cada 1,4s.",
