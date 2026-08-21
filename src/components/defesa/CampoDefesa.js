@@ -997,7 +997,7 @@ export default function CampoDefesa(props) {
                 })}
 
                 <div
-                    className={styles.comandante}
+                    className={styles.comandanteCampo}
                     style={{left: COMANDANTE.x + "px", top: batalha.comandante.y + "px"}}
                 >
                     <Image
@@ -1007,7 +1007,7 @@ export default function CampoDefesa(props) {
                         objectFit="cover"
                         objectPosition="center center"
                     />
-                    <span className={styles.comandanteArma} />
+                    <span className={styles.comandanteCampoArma} />
                 </div>
 
                 {balanco && (

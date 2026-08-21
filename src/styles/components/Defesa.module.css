@@ -458,7 +458,7 @@
     background: #050816;
 }
 
-.comandante{
+.comandanteCampo{
     position: absolute;
     z-index: 10;
     width: 56px;
@@ -472,7 +472,7 @@
     transition: top 60ms linear;
 }
 
-.comandanteArma{
+.comandanteCampoArma{
     position: absolute;
     z-index: 3;
     top: 50%;
