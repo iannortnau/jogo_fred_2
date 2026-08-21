@@ -1,6 +1,13 @@
 import {createContext, useCallback, useContext, useEffect, useMemo, useRef, useState} from "react";
 import {PERSONAGENS, buscaPersonagem} from "../data/personagens";
 import {
+    BONUS_SUPER_PLANTA_LENTA,
+    CHANCE_SUPER_PLANTA,
+    SUPER_PLANTAS,
+    recompensaDaFase,
+} from "../data/defesa";
+import {sorteiaComPeso} from "../engine/motor";
+import {
     CAPACIDADE_POR_NIVEL,
     CAPACIDADE_TANQUE_BASE,
     CHAVE_SAVE,
@@ -17,6 +24,8 @@ import {
     TOTAL_LOTES,
     UPGRADES,
     VAGAS_TRIPULACAO_BASE,
+    TOTAL_JARDIM,
+    custoUpJardim,
     custoUpgrade,
     forcaDoBonus,
     nivelDoPiloto,
@@ -71,6 +80,12 @@ function estadoInicial(){
         pilotos,
         ultimoRun: null,
         totalLorenzos: 0,
+        superPlantas: {},
+        jardim: Array.from({length: TOTAL_JARDIM}, function () {
+            return null;
+        }),
+        ultimoDrop: null,
+        defesa: {fasesVencidas: [], ultimaFase: 1},
         atualizadoEm: Date.now(),
     };
 }
@@ -94,6 +109,11 @@ function normaliza(salvo){
         refino: {...base.refino, ...(salvo.refino || {})},
         upgrades: {...base.upgrades, ...(salvo.upgrades || {})},
         pilotos: {...base.pilotos, ...(salvo.pilotos || {})},
+        superPlantas: {...base.superPlantas, ...(salvo.superPlantas || {})},
+        jardim: base.jardim.map(function (vazio, indice) {
+            return (salvo.jardim || [])[indice] || null;
+        }),
+        defesa: {...base.defesa, ...(salvo.defesa || {})},
         tripulacao: Array.isArray(salvo.tripulacao) ? salvo.tripulacao : [],
     };
 }
@@ -150,6 +170,7 @@ export function calculaRegras(estado){
         capacidadeAdubo: CAPACIDADE_TANQUE_BASE + (CAPACIDADE_POR_NIVEL * niveis.tanque),
         vagasTripulacao: VAGAS_TRIPULACAO_BASE + niveis.alojamento,
         lotesLiberados: LOTES_INICIAIS + (LOTES_POR_EXPANSAO * niveis.terreno),
+        chanceSuperPlanta: (CHANCE_SUPER_PLANTA + (0.05 * niveis.estufaEspecial)) * (1 + (soma.duracaoFertilizante > 0 ? 0.5 : 0)),
         autoColheita: niveis.autoColheita > 0,
         duracaoTurbo: DURACAO_FERTILIZANTE_TURBO * (1 + soma.duracaoFertilizante),
     };
@@ -254,23 +275,52 @@ export function FazendaProvider(props){
         setCarregada(true);
     }, []);
 
+    const gravaSave = useCallback(function (estado) {
+        if(typeof window === "undefined"){
+            return;
+        }
+
+        try {
+            window.localStorage.setItem(CHAVE_SAVE, JSON.stringify(estado));
+        } catch (erro) {
+            // sem espaco no localStorage: seguir o jogo sem salvar
+        }
+    }, []);
+
     useEffect(function () {
         if(!carregada || typeof window === "undefined"){
             return;
         }
 
         const gravar = window.setTimeout(function () {
-            try {
-                window.localStorage.setItem(CHAVE_SAVE, JSON.stringify(fazenda));
-            } catch (erro) {
-                // sem espaco no localStorage: seguir o jogo sem salvar
-            }
+            gravaSave(fazenda);
         }, 400);
 
         return function () {
             window.clearTimeout(gravar);
         };
-    }, [carregada, fazenda]);
+    }, [carregada, fazenda, gravaSave]);
+
+    // Aba em segundo plano congela o timer do save: grava na hora ao sair de vista.
+    useEffect(function () {
+        if(!carregada || typeof window === "undefined"){
+            return;
+        }
+
+        function aoEsconder(){
+            if(document.visibilityState === "hidden"){
+                gravaSave(fazendaRef.current);
+            }
+        }
+
+        document.addEventListener("visibilitychange", aoEsconder);
+        window.addEventListener("pagehide", aoEsconder);
+
+        return function () {
+            document.removeEventListener("visibilitychange", aoEsconder);
+            window.removeEventListener("pagehide", aoEsconder);
+        };
+    }, [carregada, gravaSave]);
 
     const tripulacaoAtiva = useMemo(function () {
         return fazenda.tripulacao.map(function (id) {
@@ -385,9 +435,20 @@ export function FazendaProvider(props){
                 return atual;
             }
 
+            const chance = Math.min(
+                0.85,
+                bonusRef.current.chanceSuperPlanta * (cultura.tempo >= 60000 ? BONUS_SUPER_PLANTA_LENTA : 1)
+            );
+            const sorteada = Math.random() < chance ? sorteiaComPeso(SUPER_PLANTAS) : null;
+            const superPlantas = sorteada
+                ? {...atual.superPlantas, [sorteada.id]: (atual.superPlantas[sorteada.id] || 0) + 1}
+                : atual.superPlantas;
+
             return {
                 ...atual,
                 creditos: atual.creditos + Math.round(cultura.valor * bonusRef.current.multiplicadorVenda),
+                superPlantas,
+                ultimoDrop: sorteada ? {id: sorteada.id, em: Date.now()} : atual.ultimoDrop,
                 lotes: atual.lotes.map(function (item, indice) {
                     return indice === indiceLote ? loteVazio(item.id) : item;
                 }),
@@ -537,6 +598,169 @@ export function FazendaProvider(props){
         return {adubo, xp, aduboCreditado};
     }, []);
 
+    const usaSuperPlanta = useCallback(function (plantaId) {
+        setFazenda(function (atual) {
+            const estoque = atual.superPlantas[plantaId] || 0;
+
+            if(estoque <= 0){
+                return atual;
+            }
+
+            return {
+                ...atual,
+                superPlantas: {...atual.superPlantas, [plantaId]: estoque - 1},
+            };
+        });
+    }, []);
+
+    // Fim de uma fase da defesa: paga a vitoria ou deixa a invasao infestar um lote.
+    const registrarDefesa = useCallback(function (resultado) {
+        const fase = resultado.fase;
+        const repetindo = resultado.repetindo;
+        const recompensa = recompensaDaFase(fase, repetindo);
+        const comandanteId = resultado.comandanteId;
+
+        setFazenda(function (atual) {
+            if(!resultado.venceu){
+                const alvo = atual.lotes.findIndex(function (lote, indice) {
+                    return indice < bonusRef.current.lotesLiberados && !lote.praga;
+                });
+
+                if(alvo < 0){
+                    return atual;
+                }
+
+                return {
+                    ...atual,
+                    lotes: atual.lotes.map(function (lote, indice) {
+                        if(indice !== alvo){
+                            return lote;
+                        }
+
+                        return {
+                            ...loteVazio(lote.id),
+                            praga: {cliques: 0, cliquesNecessarios: CLIQUES_PARA_BANIR},
+                        };
+                    }),
+                };
+            }
+
+            const multiplicador = resultado.multiplicadorRecompensa || 1;
+            const creditos = Math.round(recompensa.creditos * multiplicador);
+            const adubo = Math.round(recompensa.adubo * multiplicador);
+            const xp = Math.round(recompensa.xp * multiplicador);
+            const dadosPiloto = atual.pilotos[comandanteId] || {xp: 0, runs: 0};
+            const vencidas = atual.defesa.fasesVencidas.includes(fase.id)
+                ? atual.defesa.fasesVencidas
+                : [...atual.defesa.fasesVencidas, fase.id];
+
+            return {
+                ...atual,
+                creditos: atual.creditos + creditos,
+                aduboBruto: Math.min(bonusRef.current.capacidadeAdubo, atual.aduboBruto + adubo),
+                pilotos: {
+                    ...atual.pilotos,
+                    [comandanteId]: {xp: dadosPiloto.xp + xp, runs: dadosPiloto.runs + 1},
+                },
+                defesa: {
+                    fasesVencidas: vencidas,
+                    ultimaFase: Math.max(atual.defesa.ultimaFase, fase.id),
+                },
+            };
+        });
+
+        return recompensa;
+    }, []);
+
+    // Tira uma carta do deck e planta ela no jardim: vira permanente e ganha nome.
+    const plantaNoJardim = useCallback(function (indice, plantaId, nome) {
+        setFazenda(function (atual) {
+            const estoque = atual.superPlantas[plantaId] || 0;
+
+            if(estoque <= 0 || indice < 0 || indice >= TOTAL_JARDIM || atual.jardim[indice]){
+                return atual;
+            }
+
+            return {
+                ...atual,
+                superPlantas: {...atual.superPlantas, [plantaId]: estoque - 1},
+                jardim: atual.jardim.map(function (item, posicao) {
+                    if(posicao !== indice){
+                        return item;
+                    }
+
+                    return {
+                        plantaId,
+                        nome: (nome || "").trim() || "Sem nome",
+                        nivel: 1,
+                        pontos: 0,
+                        batalhas: 0,
+                    };
+                }),
+            };
+        });
+    }, []);
+
+    const renomeiaJardim = useCallback(function (indice, nome) {
+        setFazenda(function (atual) {
+            if(!atual.jardim[indice]){
+                return atual;
+            }
+
+            return {
+                ...atual,
+                jardim: atual.jardim.map(function (item, posicao) {
+                    return posicao === indice
+                        ? {...item, nome: (nome || "").trim() || item.nome}
+                        : item;
+                }),
+            };
+        });
+    }, []);
+
+    const upaJardim = useCallback(function (indice) {
+        setFazenda(function (atual) {
+            const planta = atual.jardim[indice];
+
+            if(!planta){
+                return atual;
+            }
+
+            const custo = custoUpJardim(planta.nivel);
+
+            if(planta.pontos < custo){
+                return atual;
+            }
+
+            return {
+                ...atual,
+                jardim: atual.jardim.map(function (item, posicao) {
+                    return posicao === indice
+                        ? {...item, nivel: item.nivel + 1, pontos: item.pontos - custo}
+                        : item;
+                }),
+            };
+        });
+    }, []);
+
+    // Fim de batalha: cada planta do jardim usada leva pontos para subir de nivel.
+    const creditaPontosJardim = useCallback(function (ganhos) {
+        setFazenda(function (atual) {
+            return {
+                ...atual,
+                jardim: atual.jardim.map(function (item, posicao) {
+                    const ganho = ganhos[posicao];
+
+                    if(!item || !ganho){
+                        return item;
+                    }
+
+                    return {...item, pontos: item.pontos + ganho, batalhas: item.batalhas + 1};
+                }),
+            };
+        });
+    }, []);
+
     const zerarFazenda = useCallback(function () {
         setFazenda(estadoInicial());
     }, []);
@@ -554,6 +778,12 @@ export function FazendaProvider(props){
         comprarUpgrade,
         alternarTripulante,
         registrarRun,
+        usaSuperPlanta,
+        registrarDefesa,
+        plantaNoJardim,
+        renomeiaJardim,
+        upaJardim,
+        creditaPontosJardim,
         zerarFazenda,
     };
 

@@ -888,3 +888,94 @@
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     }
 }
+
+.topoBotoes{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.botaoDefender{
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 16px;
+    border: var(--borda) solid var(--verde-escuro);
+    border-radius: var(--raio-p);
+    color: #0f2e08;
+    font-size: 13px;
+    font-weight: 800;
+    background: linear-gradient(180deg, var(--verde-claro), var(--verde));
+    box-shadow: 0 4px 0 var(--verde-escuro);
+    cursor: pointer;
+}
+
+.avisoDrop{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border: var(--borda) solid var(--verde-escuro);
+    border-radius: var(--raio-p);
+    background: linear-gradient(180deg, rgba(126, 217, 87, 0.22), rgba(4, 8, 22, 0.9));
+    box-shadow: 0 4px 0 var(--verde-escuro), 0 0 22px rgba(126, 217, 87, 0.5);
+}
+
+.avisoDropIcone{
+    font-size: 30px;
+}
+
+.cardVazio{
+    opacity: 0.55;
+}
+
+.custoCarta{
+    align-self: flex-start;
+    padding: 4px 10px;
+    border: 2px solid rgba(2, 6, 23, 0.6);
+    border-radius: 999px;
+    color: var(--texto);
+    font-size: 11px;
+    font-weight: 800;
+    background: linear-gradient(180deg, #1b2c4e, #0a1226);
+}
+
+.jardim{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.vagaJardim{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border: var(--borda) solid var(--madeira-clara);
+    border-radius: var(--raio);
+    background: linear-gradient(180deg, var(--painel-topo), var(--painel-baixo));
+    box-shadow: var(--sombra-3d);
+}
+
+.vagaVazia{
+    align-items: center;
+    border-style: dashed;
+    border-color: rgba(103, 232, 249, 0.5);
+    text-align: center;
+}
+
+.campoNome{
+    width: 100%;
+    padding: 7px 10px;
+    border: 2px solid rgba(2, 6, 23, 0.8);
+    border-radius: var(--raio-p);
+    color: var(--texto);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    background: linear-gradient(180deg, #1b2c4e, #0a1226);
+}
+
+.campoNome:focus{
+    border-color: var(--verde);
+    outline: none;
+}

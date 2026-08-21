@@ -54,6 +54,30 @@ Depois de cada run do space shooter o jogo credita o resultado na fazenda
 
 O progresso fica salvo no `localStorage` sob a chave `fazenda-intergalactica-v1`.
 
+## Ganja vs Lorenzo (defesa)
+
+Terceiro modo, em `/defesa`, rodando no mesmo motor das fases (`src/engine/motor.js`,
+`useLoopDeJogo`, `useEntradaJogo`): mesma arena de 800x600, mesma colisao por
+retangulo e os mesmos controles (WASD/espaco no PC, d-pad + A no celular).
+
+- O vaso anda pela horta com WASD e o espaco planta a carta selecionada.
+- **Mudas comuns** (Broto de Resina, Cuia-Canhao, Bong de Pedra) custam so resina,
+  que os brotos soltam no chao e o vaso coleta encostando.
+- **Deck de Super Plantas**: cartas que caem das colheitas da fazenda. Sao
+  consumidas ao plantar.
+- **Jardim**: ate 6 Super Plantas pessoais (`src/data/fazenda.js` -> TOTAL_JARDIM).
+  Plantar no jardim gasta uma carta do deck, mas dali em diante a planta e
+  permanente, tem nome escolhido por voce, entra em toda batalha e ganha pontos
+  para subir de nivel (+12% de dano e vida por nivel).
+- **Lorenzos** vem em ondas por fase. A faccao Cruzada Moral tem Fiscal da Moral,
+  Vizinho Delator, Tia do Grupo da Familia (que carrega a Mamadeira e acelera a
+  linha), Pastor de Esquina, Vigilancia Sanitaria (apreende plantas) e o Deputado
+  da Bancada, que aprova PLs bloqueando colunas.
+- O piloto escolhido vira **comandante** e aplica o bonus dele na batalha
+  (`COMANDO` em `src/data/defesa.js`).
+- Vitoria paga creditos, adubo e XP; derrota deixa uma Erva Daninha infestar um
+  lote da fazenda.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

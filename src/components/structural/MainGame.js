@@ -547,6 +547,9 @@ export default function MainGame() {
                             <Link href="/fazenda">
                                 <a className={styles.botaoFazenda}>Ir para a Fazenda</a>
                             </Link>
+                            <Link href="/defesa">
+                                <a className={styles.botaoFazenda}>Ganja vs Lorenzo</a>
+                            </Link>
                         </div>
                     </div>
                 )}

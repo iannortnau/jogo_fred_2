@@ -93,6 +93,15 @@ export const UPGRADES = [
         custoFator: 2,
     },
     {
+        id: "estufaEspecial",
+        nome: "Estufa Especial",
+        descricao: "+5% de chance de Super Planta em cada colheita.",
+        icone: "🧬",
+        max: 4,
+        custoBase: 300,
+        custoFator: 2.2,
+    },
+    {
         id: "terreno",
         nome: "Expansao de Terreno",
         descricao: "Abre +3 lotes de plantio na estufa.",
@@ -142,4 +151,21 @@ export function forcaDoBonus(valorBase, nivel){
 
 export function xpDaRun(lorenzos, pontos){
     return Math.round((lorenzos * 6) + (pontos / 12));
+}
+
+// --- Jardim de Super Plantas: ate 6 plantas pessoais, nomeadas e permanentes.
+export const TOTAL_JARDIM = 6;
+
+export function custoUpJardim(nivel){
+    return 50 * nivel;
+}
+
+export function bonusNivelJardim(nivel){
+    return 1 + ((nivel - 1) * 0.12);
+}
+
+export function pontosDaBatalha(faseId, venceu){
+    const base = 6 + (3 * faseId);
+
+    return venceu ? base : Math.round(base / 2);
 }
