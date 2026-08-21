@@ -458,23 +458,38 @@
     background: #050816;
 }
 
-.vaso{
+.comandante{
     position: absolute;
     z-index: 10;
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 52px;
-    height: 52px;
+    width: 56px;
+    height: 68px;
+    overflow: hidden;
     border: var(--borda) solid var(--madeira-clara);
-    border-radius: 14px 14px 22px 22px;
-    background: linear-gradient(180deg, #a9682c, #6b4118);
-    box-shadow: 0 0 18px rgba(224, 176, 112, 0.7);
+    border-radius: 14px 20px 20px 14px;
+    background: rgba(4, 8, 22, 0.9);
+    box-shadow: 0 0 20px rgba(224, 176, 112, 0.75);
+    pointer-events: none;
+    transition: top 60ms linear;
 }
 
-.vasoCarta{
-    font-size: 24px;
+.comandanteArma{
+    position: absolute;
+    z-index: 3;
+    top: 50%;
+    right: -14px;
+    width: 22px;
+    height: 10px;
+    border: 2px solid rgba(2, 6, 23, 0.85);
+    border-radius: 4px;
+    background: linear-gradient(90deg, #64748b, #cbd5e1);
+    transform: translateY(-50%);
+}
+
+.tiroComandante{
+    width: 26px;
+    height: 12px;
+    background: linear-gradient(90deg, #fef3c7, #fbbf24);
+    box-shadow: 0 0 14px rgba(251, 191, 36, 0.95);
 }
 
 .barraCartas{

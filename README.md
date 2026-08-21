@@ -60,9 +60,10 @@ Terceiro modo, em `/defesa`, rodando no mesmo motor das fases (`src/engine/motor
 `useLoopDeJogo`, `useEntradaJogo`): mesma arena de 800x600, mesma colisao por
 retangulo e os mesmos controles (WASD/espaco no PC, d-pad + A no celular).
 
-- Da para jogar no mouse (clique na celula para plantar, clique na resina para
-  coletar) ou no teclado/d-pad: o vaso anda com WASD e o espaco planta a carta
-  selecionada.
+- Planta-se no clique/toque (celula da horta) e a resina se pega no clique.
+- O piloto escolhido fica de guarda **em cima da cerca**: `W`/`S` (ou o d-pad)
+  sobem e descem ele, e o espaco (ou o A) da um tiro de cobertura na linha dele
+  custando resina (`COMANDANTE` em `src/data/defesa.js`).
 - **Mudas comuns** (Broto de Resina, Cuia-Canhao, Bong de Pedra) custam so resina,
   que os brotos soltam no chao e o vaso coleta encostando.
 - **Deck de Super Plantas**: cartas que caem das colheitas da fazenda. Sao

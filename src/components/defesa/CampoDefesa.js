@@ -11,6 +11,7 @@ import {useLoopDeJogo} from "../../hooks/useLoopDeJogo";
 import {useEntradaJogo} from "../../hooks/useEntradaJogo";
 import {retangulosColidem, limita} from "../../engine/motor";
 import {
+    COMANDANTE,
     DANO_INVASAO,
     GRADE,
     INTERVALO_CHUVA_RESINA,
@@ -20,7 +21,6 @@ import {
     SUPER_PLANTAS,
     TAMANHOS,
     VALIDADE_RESINA,
-    VELOCIDADE_VASO,
     VIDA_CERCA,
     buscaLorenzo,
     buscaPlanta,
@@ -76,9 +76,8 @@ function criaBatalha(fase, alturaArena){
     });
 
     return {
-        vaso: {
-            x: GRADE.inicioX + 10,
-            y: (alturaArena - TAMANHOS.vaso.altura) / 2,
+        comandante: {
+            y: GRADE.inicioY + ((GRADE.linhas * GRADE.altura) / 2) - (TAMANHOS.comandante.altura / 2),
         },
         plantas: [],
         lorenzos: [],
@@ -104,7 +103,7 @@ function criaBatalha(fase, alturaArena){
 export default function CampoDefesa(props) {
     const fase = props.fase;
     const comandante = props.comandante;
-    const {intervaloDeAtualizacao, larguraArena, alturaArena, limitaX, limitaY} = useContext(GameContext);
+    const {intervaloDeAtualizacao, larguraArena, alturaArena} = useContext(GameContext);
     const {fazenda, usaSuperPlanta, registrarDefesa} = useFazenda();
     const {audioAtivo, alternarAudio, registrarInteracao, tocarTiro, tocarPowerUp} = useGameAudio();
     const comando = useMemo(function () {
@@ -147,6 +146,7 @@ export default function CampoDefesa(props) {
     const [balanco, setBalanco] = useState(null);
     const [mira, setMira] = useState(null);
     const acoesRef = useRef({});
+    const ultimoTiroRef = useRef(0);
     const fechadaRef = useRef(false);
     const estoqueRef = useRef(fazenda.superPlantas);
 
@@ -154,11 +154,11 @@ export default function CampoDefesa(props) {
 
     const {direcao, pressionarControle, soltarControle, limpaTeclas} = useEntradaJogo({
         ativo: batalha.estado === "jogando",
-        repetirAcao: 0,
+        repetirAcao: COMANDANTE.cooldown + 40,
         aoInteragir: registrarInteracao,
         aoAcao: function () {
-            if(acoesRef.current.plantar){
-                acoesRef.current.plantar();
+            if(acoesRef.current.atirar){
+                acoesRef.current.atirar();
             }
         },
         aoTecla: function (tecla) {
@@ -192,10 +192,12 @@ export default function CampoDefesa(props) {
                 return atual;
             }
 
-            const centroX = atual.vaso.x + (TAMANHOS.vaso.largura / 2);
-            const centroY = atual.vaso.y + (TAMANHOS.vaso.altura / 2);
-            const coluna = alvo ? alvo.coluna : Math.floor((centroX - GRADE.inicioX) / GRADE.largura);
-            const linha = alvo ? alvo.linha : Math.floor((centroY - GRADE.inicioY) / GRADE.altura);
+            if(!alvo){
+                return atual;
+            }
+
+            const coluna = alvo.coluna;
+            const linha = alvo.linha;
 
             if(coluna < 0 || coluna >= GRADE.colunas || linha < 0 || linha >= GRADE.linhas){
                 return atual;
@@ -363,7 +365,45 @@ export default function CampoDefesa(props) {
         });
     }, []);
 
-    acoesRef.current = {plantar};
+    const atirar = useCallback(function () {
+        const agora = Date.now();
+
+        if(agora - ultimoTiroRef.current < COMANDANTE.cooldown){
+            return;
+        }
+
+        ultimoTiroRef.current = agora;
+        setBatalha(function (atual) {
+            if(atual.estado !== "jogando" || atual.resina < COMANDANTE.custoResina){
+                return atual;
+            }
+
+            const centro = atual.comandante.y + (TAMANHOS.comandante.altura / 2);
+            const linha = limita(
+                Math.floor((centro - GRADE.inicioY) / GRADE.altura),
+                0,
+                GRADE.linhas - 1
+            );
+
+            return {
+                ...atual,
+                resina: atual.resina - COMANDANTE.custoResina,
+                projeteis: [...atual.projeteis, {
+                    id: uuidv1(),
+                    linha,
+                    origem: "comandante",
+                    x: GRADE.inicioX - 24,
+                    y: alturaDaLinha(linha, TAMANHOS.projetil.altura),
+                    dano: COMANDANTE.dano,
+                    velocidade: COMANDANTE.velocidadeProjetil,
+                    lentidao: null,
+                }],
+            };
+        });
+        tocarTiro();
+    }, [tocarTiro]);
+
+    acoesRef.current = {plantar, atirar};
 
     const avancaBatalha = useCallback(function (passo) {
         setBatalha(function (atual) {
@@ -373,9 +413,13 @@ export default function CampoDefesa(props) {
 
             const tempo = atual.tempo + passo;
             const movimento = direcao();
-            const vaso = {
-                x: limitaX(atual.vaso.x + (movimento.x * VELOCIDADE_VASO * passo), TAMANHOS.vaso.largura),
-                y: limitaY(atual.vaso.y + (movimento.y * VELOCIDADE_VASO * passo), TAMANHOS.vaso.altura),
+            const limiteBaixo = GRADE.inicioY + (GRADE.linhas * GRADE.altura) - TAMANHOS.comandante.altura;
+            const comandantePos = {
+                y: limita(
+                    atual.comandante.y + (movimento.y * COMANDANTE.velocidade * passo),
+                    GRADE.inicioY,
+                    limiteBaixo
+                ),
             };
 
             const recargas = {};
@@ -726,34 +770,9 @@ export default function CampoDefesa(props) {
 
             lorenzos = sobreviventes;
 
-            // --- resina no chao: some com o tempo ou vai para o vaso
-            const caixaVaso = {
-                x: vaso.x,
-                y: vaso.y,
-                largura: TAMANHOS.vaso.largura,
-                altura: TAMANHOS.vaso.altura,
-            };
-
+            // --- resina no chao: some sozinha se ninguem clicar
             resinas = resinas.filter(function (gota) {
-                if(tempo - gota.nasceuEm > VALIDADE_RESINA){
-                    return false;
-                }
-
-                if(retangulosColidem(caixaVaso, caixaDe(gota, TAMANHOS.resina))){
-                    resina += gota.valor;
-                    return false;
-                }
-
-                return true;
-            });
-
-            mamadeiras = mamadeiras.filter(function (mamadeira) {
-                if(!retangulosColidem(caixaVaso, caixaDe(mamadeira, TAMANHOS.mamadeira))){
-                    return true;
-                }
-
-                resina += MAMADEIRA.recompensaResina;
-                return false;
+                return tempo - gota.nasceuEm <= VALIDADE_RESINA;
             });
 
             const estado = vidaCerca <= 0
@@ -763,7 +782,7 @@ export default function CampoDefesa(props) {
             return {
                 ...atual,
                 tempo,
-                vaso,
+                comandante: comandantePos,
                 plantas,
                 lorenzos,
                 projeteis,
@@ -781,7 +800,7 @@ export default function CampoDefesa(props) {
                 estado,
             };
         });
-    }, [comando, direcao, larguraArena, limitaX, limitaY]);
+    }, [comando, direcao, larguraArena]);
 
     useLoopDeJogo(batalha.estado === "jogando", intervaloDeAtualizacao, avancaBatalha);
 
@@ -839,6 +858,7 @@ export default function CampoDefesa(props) {
                             <span style={{width: batalha.vidaCerca + "%"}} />
                         </span>
                     </span>
+                    <span className={styles.hudItem}>🔫 Tiro <strong>{COMANDANTE.custoResina}</strong></span>
                     <span className={styles.hudItem}>🌊 Onda <strong>{Math.min(batalha.ondasTotais, ondasFeitas + 1)}/{batalha.ondasTotais}</strong></span>
                     <button className={styles.botaoSom} type="button" onClick={alternarAudio}>
                         {audioAtivo ? "Som ligado" : "Som mudo"}
@@ -945,7 +965,7 @@ export default function CampoDefesa(props) {
                     return (
                         <span
                             key={projetil.id}
-                            className={styles.projetil}
+                            className={`${styles.projetil} ${projetil.origem === "comandante" ? styles.tiroComandante : ""}`}
                             style={{left: projetil.x + "px", top: projetil.y + "px"}}
                         />
                     );
@@ -977,10 +997,17 @@ export default function CampoDefesa(props) {
                 })}
 
                 <div
-                    className={styles.vaso}
-                    style={{left: batalha.vaso.x + "px", top: batalha.vaso.y + "px"}}
+                    className={styles.comandante}
+                    style={{left: COMANDANTE.x + "px", top: batalha.comandante.y + "px"}}
                 >
-                    <span className={styles.vasoCarta}>{cartaAtual ? cartaAtual.icone : "🌱"}</span>
+                    <Image
+                        src={comandante.foto}
+                        alt={comandante.nome}
+                        layout="fill"
+                        objectFit="cover"
+                        objectPosition="center center"
+                    />
+                    <span className={styles.comandanteArma} />
                 </div>
 
                 {balanco && (
@@ -1050,8 +1077,8 @@ export default function CampoDefesa(props) {
             </div>
 
             <div className={styles.dicaDefesa}>
-                <span><kbd>WASD</kbd> mover o vaso</span>
-                <span><kbd>Espaco</kbd> plantar</span>
+                <span><kbd>W</kbd><kbd>S</kbd> mover o comandante na cerca</span>
+                <span><kbd>Espaco</kbd> atirar ({COMANDANTE.custoResina} de resina)</span>
                 <span><kbd>1-9</kbd> trocar carta</span>
                 <span>🖱️ clique na horta para plantar e na resina para coletar</span>
                 <span>Comandante: <strong>{comandante.nome}</strong> · {comando.rotulo}</span>
@@ -1060,7 +1087,7 @@ export default function CampoDefesa(props) {
             <ControlesMobile
                 aoPressionar={pressionarControle}
                 aoSoltar={soltarControle}
-                rotuloAcao="PLANTAR"
+                rotuloAcao="TIRO"
             />
         </div>
     )

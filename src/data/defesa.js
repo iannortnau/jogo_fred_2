@@ -10,7 +10,7 @@ export const GRADE = {
 };
 
 export const TAMANHOS = {
-    vaso: {largura: 52, altura: 52},
+    comandante: {largura: 56, altura: 68},
     planta: {largura: 62, altura: 74},
     lorenzo: {largura: 46, altura: 62},
     projetil: {largura: 22, altura: 10},
@@ -18,7 +18,15 @@ export const TAMANHOS = {
     mamadeira: {largura: 34, altura: 44},
 };
 
-export const VELOCIDADE_VASO = 0.26;
+// O comandante fica em cima da cerca, sobe e desce e da cobertura de fogo.
+export const COMANDANTE = {
+    x: 22,
+    velocidade: 0.3,
+    dano: 35,
+    cooldown: 380,
+    custoResina: 10,
+    velocidadeProjetil: 0.5,
+};
 export const VIDA_CERCA = 100;
 export const DANO_INVASAO = 25;
 export const VALIDADE_RESINA = 12000;
