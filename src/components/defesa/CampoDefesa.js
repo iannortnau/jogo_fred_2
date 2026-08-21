@@ -13,6 +13,7 @@ import {retangulosColidem, limita} from "../../engine/motor";
 import {
     DANO_INVASAO,
     GRADE,
+    INTERVALO_CHUVA_RESINA,
     MAMADEIRA,
     MUDAS,
     RESINA_POR_GOTA,
@@ -95,6 +96,7 @@ function criaBatalha(fase, alturaArena){
         ondasTotais: fase.ondas.length,
         derrotados: 0,
         invasoes: 0,
+        chuva: 0,
         estado: "jogando",
     };
 }
@@ -143,6 +145,7 @@ export default function CampoDefesa(props) {
 
     cartasRef.current = cartas;
     const [balanco, setBalanco] = useState(null);
+    const [mira, setMira] = useState(null);
     const acoesRef = useRef({});
     const fechadaRef = useRef(false);
     const estoqueRef = useRef(fazenda.superPlantas);
@@ -174,7 +177,7 @@ export default function CampoDefesa(props) {
         setBatalha(criaBatalha(fase, alturaArena));
     }, [alturaArena, fase, limpaTeclas]);
 
-    const plantar = useCallback(function () {
+    const plantar = useCallback(function (alvo) {
         setBatalha(function (atual) {
             if(atual.estado !== "jogando"){
                 return atual;
@@ -191,8 +194,8 @@ export default function CampoDefesa(props) {
 
             const centroX = atual.vaso.x + (TAMANHOS.vaso.largura / 2);
             const centroY = atual.vaso.y + (TAMANHOS.vaso.altura / 2);
-            const coluna = Math.floor((centroX - GRADE.inicioX) / GRADE.largura);
-            const linha = Math.floor((centroY - GRADE.inicioY) / GRADE.altura);
+            const coluna = alvo ? alvo.coluna : Math.floor((centroX - GRADE.inicioX) / GRADE.largura);
+            const linha = alvo ? alvo.linha : Math.floor((centroY - GRADE.inicioY) / GRADE.altura);
 
             if(coluna < 0 || coluna >= GRADE.colunas || linha < 0 || linha >= GRADE.linhas){
                 return atual;
@@ -318,6 +321,48 @@ export default function CampoDefesa(props) {
         });
     }, [cartaSelecionada, comando, usaSuperPlanta]);
 
+    const coletar = useCallback(function (tipo, id) {
+        setBatalha(function (atual) {
+            if(atual.estado !== "jogando"){
+                return atual;
+            }
+
+            if(tipo === "resina"){
+                const gota = atual.resinas.find(function (item) {
+                    return item.id === id;
+                });
+
+                if(!gota){
+                    return atual;
+                }
+
+                return {
+                    ...atual,
+                    resina: atual.resina + gota.valor,
+                    resinas: atual.resinas.filter(function (item) {
+                        return item.id !== id;
+                    }),
+                };
+            }
+
+            const prova = atual.mamadeiras.find(function (item) {
+                return item.id === id;
+            });
+
+            if(!prova){
+                return atual;
+            }
+
+            return {
+                ...atual,
+                resina: atual.resina + MAMADEIRA.recompensaResina,
+                mamadeiras: atual.mamadeiras.filter(function (item) {
+                    return item.id !== id;
+                }),
+            };
+        });
+    }, []);
+
     acoesRef.current = {plantar};
 
     const avancaBatalha = useCallback(function (passo) {
@@ -385,6 +430,18 @@ export default function CampoDefesa(props) {
             let resinas = atual.resinas.slice();
             let mamadeiras = atual.mamadeiras.slice();
             let resina = atual.resina;
+            let chuva = atual.chuva + passo;
+
+            if(chuva >= INTERVALO_CHUVA_RESINA){
+                chuva = 0;
+                resinas.push({
+                    id: uuidv1(),
+                    x: GRADE.inicioX + 20 + (Math.random() * ((GRADE.colunas - 1) * GRADE.largura)),
+                    y: GRADE.inicioY + 20 + (Math.random() * ((GRADE.linhas - 1) * GRADE.altura)),
+                    valor: Math.round(RESINA_POR_GOTA * (comando.resina || 1)),
+                    nasceuEm: tempo,
+                });
+            }
             let vidaCerca = atual.vidaCerca;
             let derrotados = atual.derrotados;
             let invasoes = atual.invasoes;
@@ -720,6 +777,7 @@ export default function CampoDefesa(props) {
                 vidaCerca,
                 derrotados,
                 invasoes,
+                chuva,
                 estado,
             };
         });
@@ -796,19 +854,38 @@ export default function CampoDefesa(props) {
                             return bloqueio.coluna === coluna && bloqueio.ate > batalha.tempo;
                         });
 
+                        const ocupada = batalha.plantas.some(function (planta) {
+                            return planta.linha === linha && planta.coluna === coluna;
+                        });
+                        const sobMouse = mira && mira.linha === linha && mira.coluna === coluna;
+
                         return (
-                            <div
+                            <button
                                 key={linha + "-" + coluna}
-                                className={`${styles.celula} ${(linha + coluna) % 2 === 0 ? styles.celulaPar : ""} ${bloqueada ? styles.celulaBloqueada : ""}`}
+                                type="button"
+                                className={`${styles.celula} ${(linha + coluna) % 2 === 0 ? styles.celulaPar : ""} ${bloqueada ? styles.celulaBloqueada : ""} ${sobMouse ? styles.celulaMira : ""}`}
                                 style={{
                                     left: posicao.x + "px",
                                     top: posicao.y + "px",
                                     width: GRADE.largura + "px",
                                     height: GRADE.altura + "px",
                                 }}
+                                onMouseEnter={function () {
+                                    setMira({linha, coluna});
+                                }}
+                                onMouseLeave={function () {
+                                    setMira(null);
+                                }}
+                                onClick={function () {
+                                    registrarInteracao();
+                                    plantar({linha, coluna});
+                                }}
                             >
                                 {bloqueada && <span className={styles.selo}>PL</span>}
-                            </div>
+                                {sobMouse && !ocupada && !bloqueada && cartaAtual && (
+                                    <span className={styles.previa}>{cartaAtual.icone}</span>
+                                )}
+                            </button>
                         );
                     });
                 })}
@@ -832,26 +909,35 @@ export default function CampoDefesa(props) {
 
                 {batalha.mamadeiras.map(function (mamadeira) {
                     return (
-                        <div
+                        <button
                             key={mamadeira.id}
+                            type="button"
                             className={styles.mamadeira}
                             style={{left: mamadeira.x + "px", top: mamadeira.y + "px"}}
+                            onClick={function () {
+                                coletar("mamadeira", mamadeira.id);
+                            }}
                         >
                             🍼
                             <span className={styles.tarja} />
-                        </div>
+                        </button>
                     );
                 })}
 
                 {batalha.resinas.map(function (gota) {
                     return (
-                        <div
+                        <button
                             key={gota.id}
+                            type="button"
                             className={styles.resina}
                             style={{left: gota.x + "px", top: gota.y + "px"}}
+                            onClick={function () {
+                                registrarInteracao();
+                                coletar("resina", gota.id);
+                            }}
                         >
                             🪙
-                        </div>
+                        </button>
                     );
                 })}
 
@@ -967,6 +1053,7 @@ export default function CampoDefesa(props) {
                 <span><kbd>WASD</kbd> mover o vaso</span>
                 <span><kbd>Espaco</kbd> plantar</span>
                 <span><kbd>1-9</kbd> trocar carta</span>
+                <span>🖱️ clique na horta para plantar e na resina para coletar</span>
                 <span>Comandante: <strong>{comandante.nome}</strong> · {comando.rotulo}</span>
             </div>
 

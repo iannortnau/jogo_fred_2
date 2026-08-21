@@ -60,7 +60,9 @@ Terceiro modo, em `/defesa`, rodando no mesmo motor das fases (`src/engine/motor
 `useLoopDeJogo`, `useEntradaJogo`): mesma arena de 800x600, mesma colisao por
 retangulo e os mesmos controles (WASD/espaco no PC, d-pad + A no celular).
 
-- O vaso anda pela horta com WASD e o espaco planta a carta selecionada.
+- Da para jogar no mouse (clique na celula para plantar, clique na resina para
+  coletar) ou no teclado/d-pad: o vaso anda com WASD e o espaco planta a carta
+  selecionada.
 - **Mudas comuns** (Broto de Resina, Cuia-Canhao, Bong de Pedra) custam so resina,
   que os brotos soltam no chao e o vaso coleta encostando.
 - **Deck de Super Plantas**: cartas que caem das colheitas da fazenda. Sao

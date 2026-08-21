@@ -23,6 +23,7 @@ export const VIDA_CERCA = 100;
 export const DANO_INVASAO = 25;
 export const VALIDADE_RESINA = 12000;
 export const RESINA_POR_GOTA = 25;
+export const INTERVALO_CHUVA_RESINA = 9000;
 
 export const MAMADEIRA = {
     vida: 150,
