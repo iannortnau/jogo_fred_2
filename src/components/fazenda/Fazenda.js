@@ -4,6 +4,8 @@ import Estufa from "./Estufa";
 import Refinaria from "./Refinaria";
 import Tripulacao from "./Tripulacao";
 import Loja from "./Loja";
+import Arsenal from "./Arsenal";
+import {buscaPlanta} from "../../data/defesa";
 import {useFazenda} from "../../contexts/fazendaContext";
 import styles from "../../styles/components/Fazenda.module.css";
 
@@ -11,6 +13,7 @@ const ABAS = [
     {id: "estufa", nome: "Plantacao", icone: "🌿"},
     {id: "refino", nome: "Refino", icone: "⚗️"},
     {id: "tripulacao", nome: "Tripulacao", icone: "👨‍🚀"},
+    {id: "arsenal", nome: "Arsenal", icone: "🌵"},
     {id: "loja", nome: "Upgrades", icone: "🛒"},
 ];
 
@@ -29,6 +32,9 @@ export default function Fazenda() {
     const lotesInfectados = fazenda.lotes.filter(function (lote) {
         return Boolean(lote.praga);
     }).length;
+    const drop = fazenda.ultimoDrop && (Date.now() - fazenda.ultimoDrop.em) < 8000
+        ? buscaPlanta(fazenda.ultimoDrop.id)
+        : null;
 
     return (
         <div className={styles.fazenda}>
@@ -40,9 +46,14 @@ export default function Fazenda() {
                     </span>
                 </div>
 
-                <Link href="/">
-                    <a className={styles.botaoVoltar}>🚀 Ir para as fases</a>
-                </Link>
+                <div className={styles.topoBotoes}>
+                    <Link href="/defesa">
+                        <a className={styles.botaoDefender}>🌿 Defesa</a>
+                    </Link>
+                    <Link href="/">
+                        <a className={styles.botaoVoltar}>🚀 Fases</a>
+                    </Link>
+                </div>
             </div>
 
             <div className={styles.recursos}>
@@ -68,6 +79,18 @@ export default function Fazenda() {
                     </div>
                 </div>
             </div>
+
+            {drop && (
+                <div className={styles.avisoDrop}>
+                    <span className={styles.avisoDropIcone}>{drop.icone}</span>
+                    <div>
+                        <strong>Super Planta na colheita!</strong>
+                        <span className={styles.blocoTexto}>
+                            {drop.nome} foi para o Arsenal.
+                        </span>
+                    </div>
+                </div>
+            )}
 
             {lotesInfectados > 0 && (
                 <div className={styles.alertaErva}>
@@ -96,6 +119,7 @@ export default function Fazenda() {
             {aba === "estufa" && <Estufa />}
             {aba === "refino" && <Refinaria />}
             {aba === "tripulacao" && <Tripulacao />}
+            {aba === "arsenal" && <Arsenal />}
             {aba === "loja" && <Loja />}
         </div>
     )

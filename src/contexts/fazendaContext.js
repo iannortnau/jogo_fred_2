@@ -1,6 +1,13 @@
 import {createContext, useCallback, useContext, useEffect, useMemo, useRef, useState} from "react";
 import {PERSONAGENS, buscaPersonagem} from "../data/personagens";
 import {
+    BONUS_SUPER_PLANTA_LENTA,
+    CHANCE_SUPER_PLANTA,
+    SUPER_PLANTAS,
+    recompensaDaFase,
+} from "../data/defesa";
+import {sorteiaComPeso} from "../engine/motor";
+import {
     CAPACIDADE_POR_NIVEL,
     CAPACIDADE_TANQUE_BASE,
     CHAVE_SAVE,
@@ -71,6 +78,9 @@ function estadoInicial(){
         pilotos,
         ultimoRun: null,
         totalLorenzos: 0,
+        superPlantas: {},
+        ultimoDrop: null,
+        defesa: {fasesVencidas: [], ultimaFase: 1},
         atualizadoEm: Date.now(),
     };
 }
@@ -84,6 +94,14 @@ function normaliza(salvo){
     }
 
     const lotes = Array.isArray(salvo.lotes) ? salvo.lotes : base.lotes;
+    const superPlantas = {...base.superPlantas, ...(salvo.superPlantas || {})};
+
+    // Save antigo tinha jardim: as plantas de la voltam como carta do deck.
+    (salvo.jardim || []).forEach(function (item) {
+        if(item && item.plantaId){
+            superPlantas[item.plantaId] = (superPlantas[item.plantaId] || 0) + 1;
+        }
+    });
 
     return {
         ...base,
@@ -94,6 +112,9 @@ function normaliza(salvo){
         refino: {...base.refino, ...(salvo.refino || {})},
         upgrades: {...base.upgrades, ...(salvo.upgrades || {})},
         pilotos: {...base.pilotos, ...(salvo.pilotos || {})},
+        superPlantas,
+        jardim: undefined,
+        defesa: {...base.defesa, ...(salvo.defesa || {})},
         tripulacao: Array.isArray(salvo.tripulacao) ? salvo.tripulacao : [],
     };
 }
@@ -150,6 +171,7 @@ export function calculaRegras(estado){
         capacidadeAdubo: CAPACIDADE_TANQUE_BASE + (CAPACIDADE_POR_NIVEL * niveis.tanque),
         vagasTripulacao: VAGAS_TRIPULACAO_BASE + niveis.alojamento,
         lotesLiberados: LOTES_INICIAIS + (LOTES_POR_EXPANSAO * niveis.terreno),
+        chanceSuperPlanta: (CHANCE_SUPER_PLANTA + (0.05 * niveis.estufaEspecial)) * (1 + (soma.duracaoFertilizante > 0 ? 0.5 : 0)),
         autoColheita: niveis.autoColheita > 0,
         duracaoTurbo: DURACAO_FERTILIZANTE_TURBO * (1 + soma.duracaoFertilizante),
     };
@@ -254,23 +276,52 @@ export function FazendaProvider(props){
         setCarregada(true);
     }, []);
 
+    const gravaSave = useCallback(function (estado) {
+        if(typeof window === "undefined"){
+            return;
+        }
+
+        try {
+            window.localStorage.setItem(CHAVE_SAVE, JSON.stringify(estado));
+        } catch (erro) {
+            // sem espaco no localStorage: seguir o jogo sem salvar
+        }
+    }, []);
+
     useEffect(function () {
         if(!carregada || typeof window === "undefined"){
             return;
         }
 
         const gravar = window.setTimeout(function () {
-            try {
-                window.localStorage.setItem(CHAVE_SAVE, JSON.stringify(fazenda));
-            } catch (erro) {
-                // sem espaco no localStorage: seguir o jogo sem salvar
-            }
+            gravaSave(fazenda);
         }, 400);
 
         return function () {
             window.clearTimeout(gravar);
         };
-    }, [carregada, fazenda]);
+    }, [carregada, fazenda, gravaSave]);
+
+    // Aba em segundo plano congela o timer do save: grava na hora ao sair de vista.
+    useEffect(function () {
+        if(!carregada || typeof window === "undefined"){
+            return;
+        }
+
+        function aoEsconder(){
+            if(document.visibilityState === "hidden"){
+                gravaSave(fazendaRef.current);
+            }
+        }
+
+        document.addEventListener("visibilitychange", aoEsconder);
+        window.addEventListener("pagehide", aoEsconder);
+
+        return function () {
+            document.removeEventListener("visibilitychange", aoEsconder);
+            window.removeEventListener("pagehide", aoEsconder);
+        };
+    }, [carregada, gravaSave]);
 
     const tripulacaoAtiva = useMemo(function () {
         return fazenda.tripulacao.map(function (id) {
@@ -385,9 +436,20 @@ export function FazendaProvider(props){
                 return atual;
             }
 
+            const chance = Math.min(
+                0.85,
+                bonusRef.current.chanceSuperPlanta * (cultura.tempo >= 60000 ? BONUS_SUPER_PLANTA_LENTA : 1)
+            );
+            const sorteada = Math.random() < chance ? sorteiaComPeso(SUPER_PLANTAS) : null;
+            const superPlantas = sorteada
+                ? {...atual.superPlantas, [sorteada.id]: (atual.superPlantas[sorteada.id] || 0) + 1}
+                : atual.superPlantas;
+
             return {
                 ...atual,
                 creditos: atual.creditos + Math.round(cultura.valor * bonusRef.current.multiplicadorVenda),
+                superPlantas,
+                ultimoDrop: sorteada ? {id: sorteada.id, em: Date.now()} : atual.ultimoDrop,
                 lotes: atual.lotes.map(function (item, indice) {
                     return indice === indiceLote ? loteVazio(item.id) : item;
                 }),
@@ -537,6 +599,80 @@ export function FazendaProvider(props){
         return {adubo, xp, aduboCreditado};
     }, []);
 
+    const usaSuperPlanta = useCallback(function (plantaId) {
+        setFazenda(function (atual) {
+            const estoque = atual.superPlantas[plantaId] || 0;
+
+            if(estoque <= 0){
+                return atual;
+            }
+
+            return {
+                ...atual,
+                superPlantas: {...atual.superPlantas, [plantaId]: estoque - 1},
+            };
+        });
+    }, []);
+
+    // Fim de uma fase da defesa: paga a vitoria ou deixa a invasao infestar um lote.
+    const registrarDefesa = useCallback(function (resultado) {
+        const fase = resultado.fase;
+        const repetindo = resultado.repetindo;
+        const recompensa = recompensaDaFase(fase, repetindo);
+        const comandanteId = resultado.comandanteId;
+
+        setFazenda(function (atual) {
+            if(!resultado.venceu){
+                const alvo = atual.lotes.findIndex(function (lote, indice) {
+                    return indice < bonusRef.current.lotesLiberados && !lote.praga;
+                });
+
+                if(alvo < 0){
+                    return atual;
+                }
+
+                return {
+                    ...atual,
+                    lotes: atual.lotes.map(function (lote, indice) {
+                        if(indice !== alvo){
+                            return lote;
+                        }
+
+                        return {
+                            ...loteVazio(lote.id),
+                            praga: {cliques: 0, cliquesNecessarios: CLIQUES_PARA_BANIR},
+                        };
+                    }),
+                };
+            }
+
+            const multiplicador = resultado.multiplicadorRecompensa || 1;
+            const creditos = Math.round(recompensa.creditos * multiplicador);
+            const adubo = Math.round(recompensa.adubo * multiplicador);
+            const xp = Math.round(recompensa.xp * multiplicador);
+            const dadosPiloto = atual.pilotos[comandanteId] || {xp: 0, runs: 0};
+            const vencidas = atual.defesa.fasesVencidas.includes(fase.id)
+                ? atual.defesa.fasesVencidas
+                : [...atual.defesa.fasesVencidas, fase.id];
+
+            return {
+                ...atual,
+                creditos: atual.creditos + creditos,
+                aduboBruto: Math.min(bonusRef.current.capacidadeAdubo, atual.aduboBruto + adubo),
+                pilotos: {
+                    ...atual.pilotos,
+                    [comandanteId]: {xp: dadosPiloto.xp + xp, runs: dadosPiloto.runs + 1},
+                },
+                defesa: {
+                    fasesVencidas: vencidas,
+                    ultimaFase: Math.max(atual.defesa.ultimaFase, fase.id),
+                },
+            };
+        });
+
+        return recompensa;
+    }, []);
+
     const zerarFazenda = useCallback(function () {
         setFazenda(estadoInicial());
     }, []);
@@ -554,6 +690,8 @@ export function FazendaProvider(props){
         comprarUpgrade,
         alternarTripulante,
         registrarRun,
+        usaSuperPlanta,
+        registrarDefesa,
         zerarFazenda,
     };
 

@@ -93,6 +93,15 @@ export const UPGRADES = [
         custoFator: 2,
     },
     {
+        id: "estufaEspecial",
+        nome: "Estufa Especial",
+        descricao: "+5% de chance de Super Planta em cada colheita.",
+        icone: "🧬",
+        max: 4,
+        custoBase: 300,
+        custoFator: 2.2,
+    },
+    {
         id: "terreno",
         nome: "Expansao de Terreno",
         descricao: "Abre +3 lotes de plantio na estufa.",

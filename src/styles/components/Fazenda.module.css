@@ -3,10 +3,10 @@
 .fazenda{
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    width: min(1000px, calc(100vw - 20px));
-    max-height: min(100vh, 900px);
-    padding: 18px;
+    gap: 18px;
+    width: min(1440px, calc(100vw - 24px));
+    max-height: calc(100vh - 16px);
+    padding: 22px;
     overflow-y: auto;
     border: 6px solid var(--madeira);
     border-radius: var(--raio-g);
@@ -52,7 +52,7 @@
 }
 
 .titulo{
-    font-size: 24px;
+    font-size: 30px;
     text-shadow: 0 0 16px rgba(126, 217, 87, 0.6);
 }
 
@@ -70,36 +70,36 @@
 
 .recursos{
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
     gap: 10px;
 }
 
 .recurso{
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
+    gap: 12px;
+    padding: 14px 18px;
 }
 
 .recursoIcone{
-    font-size: 24px;
+    font-size: 30px;
 }
 
 .recurso strong{
     display: block;
-    font-size: 20px;
+    font-size: 26px;
     line-height: 1.1;
 }
 
 .recurso strong small{
     color: var(--texto-fraco);
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
 }
 
 .recurso span{
     color: var(--texto-fraco);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
 }
 
@@ -129,12 +129,12 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 9px 14px;
+    padding: 11px 18px;
     border: var(--borda) solid rgba(2, 6, 23, 0.7);
     border-radius: var(--raio-p);
     color: var(--texto-suave);
     font-family: inherit;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 800;
     background: linear-gradient(180deg, #1b2c4e, #0a1226);
     box-shadow: 0 3px 0 rgba(2, 6, 23, 0.85);
@@ -173,12 +173,12 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 12px;
+    padding: 10px 14px;
     border: var(--borda) solid rgba(2, 6, 23, 0.7);
     border-radius: var(--raio-p);
     color: var(--texto);
     font-family: inherit;
-    font-size: 12px;
+    font-size: 13.5px;
     font-weight: 700;
     background: linear-gradient(180deg, #1b2c4e, #0a1226);
     box-shadow: 0 3px 0 rgba(2, 6, 23, 0.85);
@@ -187,7 +187,7 @@
 
 .chip strong{
     color: var(--texto-fraco);
-    font-size: 11px;
+    font-size: 12.5px;
 }
 
 .chipAtivo{
@@ -200,7 +200,7 @@
     align-items: center;
     gap: 8px;
     color: var(--texto-suave);
-    font-size: 12px;
+    font-size: 13.5px;
     font-weight: 700;
     cursor: pointer;
 }
@@ -217,8 +217,8 @@
 
 .lotes{
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(206px, 1fr));
+    gap: 12px;
 }
 
 .lote{
@@ -226,8 +226,8 @@
     flex-direction: column;
     align-items: center;
     gap: 7px;
-    min-height: 176px;
-    padding: 10px;
+    min-height: 214px;
+    padding: 14px;
     border: var(--borda) solid var(--madeira-escura);
     border-radius: var(--raio);
     color: #f7ead2;
@@ -279,25 +279,25 @@
 
 .loteTitulo{
     color: var(--madeira-clara);
-    font-size: 11px;
+    font-size: 12.5px;
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
 }
 
 .loteIcone{
-    font-size: 34px;
+    font-size: 44px;
     line-height: 1;
     filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.55));
 }
 
 .loteNome{
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .loteEstado{
-    color: #f0e2c8;
-    font-size: 12px;
+    color: #f4e9d6;
+    font-size: 13.5px;
     font-weight: 700;
 }
 
@@ -325,12 +325,12 @@
 .botaoComprar,
 .botaoEscalar,
 .botaoDispensar{
-    padding: 9px 14px;
+    padding: 11px 16px;
     border: var(--borda) solid var(--verde-escuro);
     border-radius: var(--raio-p);
     color: #0f2e08;
     font-family: inherit;
-    font-size: 13px;
+    font-size: 14.5px;
     font-weight: 800;
     background: linear-gradient(180deg, var(--verde-claro), var(--verde));
     box-shadow: 0 4px 0 var(--verde-escuro);
@@ -341,7 +341,7 @@
 .botaoDispensar{
     border-color: rgba(2, 6, 23, 0.8);
     color: var(--texto);
-    font-size: 11px;
+    font-size: 12.5px;
     background: linear-gradient(180deg, #1b2c4e, #0a1226);
     box-shadow: 0 3px 0 rgba(2, 6, 23, 0.85);
 }
@@ -379,15 +379,16 @@
 .blocoTitulo{
     display: block;
     color: var(--texto);
-    font-size: 16px;
+    font-size: 18px;
 }
 
 .blocoTexto{
     display: block;
+    max-width: 68ch;
     color: var(--texto-fraco);
-    font-size: 12px;
+    font-size: 13.5px;
     font-weight: 600;
-    line-height: 1.45;
+    line-height: 1.55;
 }
 
 .refinaria{
@@ -426,8 +427,8 @@
 }
 
 .tanqueTampa{
-    width: 118px;
-    height: 14px;
+    width: 136px;
+    height: 16px;
     border: var(--borda) solid rgba(2, 6, 23, 0.8);
     border-radius: 999px;
     background: linear-gradient(180deg, #93a7c9, #4c5f80);
@@ -438,8 +439,8 @@
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    width: 110px;
-    height: 132px;
+    width: 128px;
+    height: 154px;
     overflow: hidden;
     border: var(--borda) solid rgba(226, 240, 255, 0.6);
     border-radius: 12px;
@@ -453,7 +454,7 @@
     position: relative;
     z-index: 2;
     margin-bottom: 8px;
-    font-size: 22px;
+    font-size: 26px;
     text-shadow: 0 2px 3px rgba(0, 0, 0, 0.75);
 }
 
@@ -481,7 +482,7 @@
     border: 2px solid var(--madeira-escura);
     border-radius: 999px;
     color: var(--madeira-clara);
-    font-size: 11px;
+    font-size: 12.5px;
     font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -549,7 +550,7 @@
     border: var(--borda) solid rgba(2, 6, 23, 0.8);
     border-radius: var(--raio-p);
     color: #0b1220;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 800;
     letter-spacing: 0.12em;
     background: linear-gradient(180deg, #e2e8f0, #94a3b8);
@@ -557,13 +558,13 @@
 }
 
 .botaoLatao{
-    width: 84px;
-    height: 84px;
+    width: 96px;
+    height: 96px;
     border: 4px solid #7a5613;
     border-radius: 999px;
     color: #3f2a10;
     font-family: inherit;
-    font-size: 11px;
+    font-size: 12.5px;
     font-weight: 800;
     line-height: 1.25;
     background: radial-gradient(circle at 34% 28%, #ffe9a8, #d9a441 60%, #a9791f);
@@ -588,8 +589,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 92px;
-    height: 92px;
+    width: 104px;
+    height: 104px;
     border: 4px solid rgba(2, 6, 23, 0.8);
     border-radius: 999px;
     background: radial-gradient(circle at 50% 40%, #e2e8f0, #94a3b8);
@@ -627,7 +628,7 @@
 
 .filaTexto{
     color: var(--texto-suave);
-    font-size: 13px;
+    font-size: 14.5px;
     font-weight: 800;
     white-space: nowrap;
 }
@@ -699,7 +700,7 @@
 
 .riscoTitulo{
     color: var(--texto-suave);
-    font-size: 13px;
+    font-size: 15px;
     letter-spacing: 0.12em;
     text-align: center;
 }
@@ -715,7 +716,7 @@
 
 .leds span{
     flex: 1;
-    height: 22px;
+    height: 26px;
     border-radius: 3px;
 }
 
@@ -754,20 +755,21 @@
 .vagasAviso{
     display: flex;
     flex-direction: column;
-    gap: 3px;
-    padding: 10px 14px;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 14px 18px;
 }
 
 .vagasAviso span{
     color: var(--texto-fraco);
-    font-size: 12px;
+    font-size: 13.5px;
     font-weight: 600;
 }
 
 .tripulacao{
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 14px;
 }
 
 .cardTripulante{
@@ -808,7 +810,7 @@
 
 .tripulantePapel{
     color: var(--nave-casco, var(--verde));
-    font-size: 11px;
+    font-size: 12.5px;
     font-weight: 800;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -826,14 +828,14 @@
 
 .tripulanteXp{
     color: var(--texto-fraco);
-    font-size: 11px;
+    font-size: 12.5px;
     font-weight: 700;
 }
 
 .upgrades{
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 14px;
 }
 
 .cardUpgrade{
@@ -850,13 +852,13 @@
 }
 
 .upgradeIcone{
-    font-size: 26px;
+    font-size: 30px;
 }
 
 .upgradeNivel{
     display: block;
     color: var(--texto-fraco);
-    font-size: 12px;
+    font-size: 13.5px;
     font-weight: 700;
 }
 
@@ -885,6 +887,58 @@
     .lotes,
     .tripulacao,
     .upgrades{
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
     }
 }
+
+.topoBotoes{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.botaoDefender{
+    display: inline-flex;
+    align-self: flex-start;
+    align-items: center;
+    padding: 10px 16px;
+    border: var(--borda) solid var(--verde-escuro);
+    border-radius: var(--raio-p);
+    color: #0f2e08;
+    font-size: 13px;
+    font-weight: 800;
+    background: linear-gradient(180deg, var(--verde-claro), var(--verde));
+    box-shadow: 0 4px 0 var(--verde-escuro);
+    cursor: pointer;
+}
+
+.avisoDrop{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border: var(--borda) solid var(--verde-escuro);
+    border-radius: var(--raio-p);
+    background: linear-gradient(180deg, rgba(126, 217, 87, 0.22), rgba(4, 8, 22, 0.9));
+    box-shadow: 0 4px 0 var(--verde-escuro), 0 0 22px rgba(126, 217, 87, 0.5);
+}
+
+.avisoDropIcone{
+    font-size: 30px;
+}
+
+.cardVazio{
+    opacity: 0.55;
+}
+
+.custoCarta{
+    align-self: flex-start;
+    padding: 4px 10px;
+    border: 2px solid rgba(2, 6, 23, 0.6);
+    border-radius: 999px;
+    color: var(--texto);
+    font-size: 11px;
+    font-weight: 800;
+    background: linear-gradient(180deg, #1b2c4e, #0a1226);
+}
+
