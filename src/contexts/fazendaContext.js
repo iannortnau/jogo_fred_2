@@ -24,8 +24,6 @@ import {
     TOTAL_LOTES,
     UPGRADES,
     VAGAS_TRIPULACAO_BASE,
-    TOTAL_JARDIM,
-    custoUpJardim,
     custoUpgrade,
     forcaDoBonus,
     nivelDoPiloto,
@@ -81,9 +79,6 @@ function estadoInicial(){
         ultimoRun: null,
         totalLorenzos: 0,
         superPlantas: {},
-        jardim: Array.from({length: TOTAL_JARDIM}, function () {
-            return null;
-        }),
         ultimoDrop: null,
         defesa: {fasesVencidas: [], ultimaFase: 1},
         atualizadoEm: Date.now(),
@@ -99,6 +94,14 @@ function normaliza(salvo){
     }
 
     const lotes = Array.isArray(salvo.lotes) ? salvo.lotes : base.lotes;
+    const superPlantas = {...base.superPlantas, ...(salvo.superPlantas || {})};
+
+    // Save antigo tinha jardim: as plantas de la voltam como carta do deck.
+    (salvo.jardim || []).forEach(function (item) {
+        if(item && item.plantaId){
+            superPlantas[item.plantaId] = (superPlantas[item.plantaId] || 0) + 1;
+        }
+    });
 
     return {
         ...base,
@@ -109,10 +112,8 @@ function normaliza(salvo){
         refino: {...base.refino, ...(salvo.refino || {})},
         upgrades: {...base.upgrades, ...(salvo.upgrades || {})},
         pilotos: {...base.pilotos, ...(salvo.pilotos || {})},
-        superPlantas: {...base.superPlantas, ...(salvo.superPlantas || {})},
-        jardim: base.jardim.map(function (vazio, indice) {
-            return (salvo.jardim || [])[indice] || null;
-        }),
+        superPlantas,
+        jardim: undefined,
         defesa: {...base.defesa, ...(salvo.defesa || {})},
         tripulacao: Array.isArray(salvo.tripulacao) ? salvo.tripulacao : [],
     };
@@ -672,95 +673,6 @@ export function FazendaProvider(props){
         return recompensa;
     }, []);
 
-    // Tira uma carta do deck e planta ela no jardim: vira permanente e ganha nome.
-    const plantaNoJardim = useCallback(function (indice, plantaId, nome) {
-        setFazenda(function (atual) {
-            const estoque = atual.superPlantas[plantaId] || 0;
-
-            if(estoque <= 0 || indice < 0 || indice >= TOTAL_JARDIM || atual.jardim[indice]){
-                return atual;
-            }
-
-            return {
-                ...atual,
-                superPlantas: {...atual.superPlantas, [plantaId]: estoque - 1},
-                jardim: atual.jardim.map(function (item, posicao) {
-                    if(posicao !== indice){
-                        return item;
-                    }
-
-                    return {
-                        plantaId,
-                        nome: (nome || "").trim() || "Sem nome",
-                        nivel: 1,
-                        pontos: 0,
-                        batalhas: 0,
-                    };
-                }),
-            };
-        });
-    }, []);
-
-    const renomeiaJardim = useCallback(function (indice, nome) {
-        setFazenda(function (atual) {
-            if(!atual.jardim[indice]){
-                return atual;
-            }
-
-            return {
-                ...atual,
-                jardim: atual.jardim.map(function (item, posicao) {
-                    return posicao === indice
-                        ? {...item, nome: (nome || "").trim() || item.nome}
-                        : item;
-                }),
-            };
-        });
-    }, []);
-
-    const upaJardim = useCallback(function (indice) {
-        setFazenda(function (atual) {
-            const planta = atual.jardim[indice];
-
-            if(!planta){
-                return atual;
-            }
-
-            const custo = custoUpJardim(planta.nivel);
-
-            if(planta.pontos < custo){
-                return atual;
-            }
-
-            return {
-                ...atual,
-                jardim: atual.jardim.map(function (item, posicao) {
-                    return posicao === indice
-                        ? {...item, nivel: item.nivel + 1, pontos: item.pontos - custo}
-                        : item;
-                }),
-            };
-        });
-    }, []);
-
-    // Fim de batalha: cada planta do jardim usada leva pontos para subir de nivel.
-    const creditaPontosJardim = useCallback(function (ganhos) {
-        setFazenda(function (atual) {
-            return {
-                ...atual,
-                jardim: atual.jardim.map(function (item, posicao) {
-                    const ganho = ganhos[posicao];
-
-                    if(!item || !ganho){
-                        return item;
-                    }
-
-                    return {...item, pontos: item.pontos + ganho, batalhas: item.batalhas + 1};
-                }),
-            };
-        });
-    }, []);
-
     const zerarFazenda = useCallback(function () {
         setFazenda(estadoInicial());
     }, []);
@@ -780,10 +692,6 @@ export function FazendaProvider(props){
         registrarRun,
         usaSuperPlanta,
         registrarDefesa,
-        plantaNoJardim,
-        renomeiaJardim,
-        upaJardim,
-        creditaPontosJardim,
         zerarFazenda,
     };
 

@@ -65,10 +65,6 @@ retangulo e os mesmos controles (WASD/espaco no PC, d-pad + A no celular).
   que os brotos soltam no chao e o vaso coleta encostando.
 - **Deck de Super Plantas**: cartas que caem das colheitas da fazenda. Sao
   consumidas ao plantar.
-- **Jardim**: ate 6 Super Plantas pessoais (`src/data/fazenda.js` -> TOTAL_JARDIM).
-  Plantar no jardim gasta uma carta do deck, mas dali em diante a planta e
-  permanente, tem nome escolhido por voce, entra em toda batalha e ganha pontos
-  para subir de nivel (+12% de dano e vida por nivel).
 - **Lorenzos** vem em ondas por fase. A faccao Cruzada Moral tem Fiscal da Moral,
   Vizinho Delator, Tia do Grupo da Familia (que carrega a Mamadeira e acelera a
   linha), Pastor de Esquina, Vigilancia Sanitaria (apreende plantas) e o Deputado

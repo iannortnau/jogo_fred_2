@@ -676,19 +676,6 @@
     }
 }
 
-.cartajardim{
-    border-color: var(--madeira-clara);
-}
-
 .cartadeck{
     border-color: rgba(126, 217, 87, 0.55);
-}
-
-.cartaNivel{
-    position: absolute;
-    top: 3px;
-    right: 5px;
-    color: var(--madeira-clara);
-    font-size: 10px;
-    font-weight: 800;
 }

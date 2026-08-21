@@ -26,7 +26,6 @@ import {
     comandoDoPiloto,
     recompensaDaFase,
 } from "../../data/defesa";
-import {bonusNivelJardim, pontosDaBatalha} from "../../data/fazenda";
 import styles from "../../styles/components/Defesa.module.css";
 
 function posicaoCelula(linha, coluna){
@@ -96,7 +95,6 @@ function criaBatalha(fase, alturaArena){
         ondasTotais: fase.ondas.length,
         derrotados: 0,
         invasoes: 0,
-        usosJardim: {},
         estado: "jogando",
     };
 }
@@ -105,7 +103,7 @@ export default function CampoDefesa(props) {
     const fase = props.fase;
     const comandante = props.comandante;
     const {intervaloDeAtualizacao, larguraArena, alturaArena, limitaX, limitaY} = useContext(GameContext);
-    const {fazenda, usaSuperPlanta, registrarDefesa, creditaPontosJardim} = useFazenda();
+    const {fazenda, usaSuperPlanta, registrarDefesa} = useFazenda();
     const {audioAtivo, alternarAudio, registrarInteracao, tocarTiro, tocarPowerUp} = useGameAudio();
     const comando = useMemo(function () {
         return comandoDoPiloto(comandante);
@@ -139,29 +137,8 @@ export default function CampoDefesa(props) {
                 multiplicador: 1,
             };
         });
-        const jardim = fazenda.jardim.map(function (item, indice) {
-            if(!item){
-                return null;
-            }
-
-            const planta = buscaPlanta(item.plantaId);
-
-            return {
-                chave: "jardim:" + indice,
-                plantaId: item.plantaId,
-                origem: "jardim",
-                indiceJardim: indice,
-                nome: item.nome,
-                icone: planta ? planta.icone : "🌿",
-                custoResina: planta ? planta.custoResina : 0,
-                consomeCarta: false,
-                nivel: item.nivel,
-                multiplicador: bonusNivelJardim(item.nivel),
-            };
-        }).filter(Boolean);
-
-        return [...comuns, ...deck, ...jardim];
-    }, [fazenda.jardim]);
+        return [...comuns, ...deck];
+    }, []);
     const cartasRef = useRef(cartas);
 
     cartasRef.current = cartas;
@@ -259,9 +236,6 @@ export default function CampoDefesa(props) {
                 [carta.chave]: planta.recarga * (comando.recarga || 1),
             };
             const resina = atual.resina - carta.custoResina;
-            const usosJardim = carta.origem === "jardim"
-                ? {...atual.usosJardim, [carta.indiceJardim]: true}
-                : atual.usosJardim;
 
             if(planta.comportamento === "bomba"){
                 const alvo = posicaoCelula(linha, coluna);
@@ -286,7 +260,6 @@ export default function CampoDefesa(props) {
                     ...atual,
                     resina,
                     recargas,
-                    usosJardim,
                     lorenzos: lorenzos.filter(function (lorenzo) {
                         return lorenzo.vida > 0;
                     }),
@@ -304,7 +277,6 @@ export default function CampoDefesa(props) {
                     ...atual,
                     resina,
                     recargas,
-                    usosJardim,
                     bloqueios: [],
                     protecaoAte: atual.tempo + (planta.protecao * (comando.efeitos || 1)),
                 };
@@ -331,7 +303,6 @@ export default function CampoDefesa(props) {
                     ...atual,
                     resina,
                     recargas,
-                    usosJardim,
                     plantas: [...atual.plantas, nova],
                     mamadeiras: [],
                     imunidades: [...atual.imunidades, {linha, ate: atual.tempo + duracao}],
@@ -342,7 +313,6 @@ export default function CampoDefesa(props) {
                 ...atual,
                 resina,
                 recargas,
-                usosJardim,
                 plantas: [...atual.plantas, nova],
             };
         });
@@ -766,16 +736,6 @@ export default function CampoDefesa(props) {
         limpaTeclas();
 
         const venceu = batalha.estado === "vitoria";
-        const pontos = pontosDaBatalha(fase.id, venceu);
-        const ganhos = {};
-
-        Object.keys(batalha.usosJardim).forEach(function (indice) {
-            ganhos[indice] = pontos;
-        });
-
-        if(Object.keys(ganhos).length > 0){
-            creditaPontosJardim(ganhos);
-        }
 
         registrarDefesa({
             fase,
@@ -800,9 +760,8 @@ export default function CampoDefesa(props) {
                 xp: Math.round(base.xp * multiplicador),
             },
             derrotados: batalha.derrotados,
-            pontosJardim: Object.keys(ganhos).length > 0 ? pontos : 0,
         });
-    }, [batalha.derrotados, batalha.estado, batalha.usosJardim, comandante, comando, creditaPontosJardim, fase, limpaTeclas, props.jaVencida, registrarDefesa, tocarPowerUp]);
+    }, [batalha.derrotados, batalha.estado, comandante, comando, fase, limpaTeclas, props.jaVencida, registrarDefesa, tocarPowerUp]);
 
     const cartaAtual = cartas.find(function (item) {
         return item.chave === cartaSelecionada;
@@ -950,9 +909,6 @@ export default function CampoDefesa(props) {
                                 <span><em>Creditos</em><strong>+{balanco.recompensa.creditos}</strong></span>
                                 <span><em>Adubo</em><strong>+{balanco.recompensa.adubo}</strong></span>
                                 <span><em>XP de {comandante.nome}</em><strong>+{balanco.recompensa.xp}</strong></span>
-                                {balanco.pontosJardim > 0 && (
-                                    <span><em>Pontos do jardim</em><strong>+{balanco.pontosJardim}</strong></span>
-                                )}
                             </div>
                         ) : (
                             <span className={styles.avisoDerrota}>
@@ -990,13 +946,11 @@ export default function CampoDefesa(props) {
                             }}
                         >
                             <span className={styles.cartaAtalho}>{indice + 1}</span>
-                            {carta.origem === "jardim" && <span className={styles.cartaNivel}>Nv {carta.nivel}</span>}
                             <span className={styles.cartaIcone}>{carta.icone}</span>
                             <span className={styles.cartaNome}>{carta.nome}</span>
                             <span className={styles.cartaCusto}>
                                 {carta.custoResina > 0 ? carta.custoResina + " 🪙" : "gratis"}
                                 {carta.consomeCarta ? " · x" + estoque : ""}
-                                {carta.origem === "jardim" ? " · jardim" : ""}
                             </span>
                             {recarga > 0 && (
                                 <span
